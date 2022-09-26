@@ -1,6 +1,5 @@
 FROM ubuntu:latest
 WORKDIR /usr/src/app
-ADD NUSAutoLyrixAlign-patched.tar.gz .
 COPY ["*.js", "index.html", "package.json", "/usr/src/app/"]
 RUN apt update && apt -y install ffmpeg nodejs zlib1g-dev wget python3 python2 python3-pip dos2unix git automake autoconf unzip sox gfortran libtool subversion npm zip unzip
 RUN npm install
