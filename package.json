@@ -18,8 +18,8 @@
   "homepage": "https://github.com/Helvio88/lyrix#readme",
   "dependencies": {
     "colors": "^1.4.0",
-    "express": "^4.18.1",
-    "express-fileupload": "^1.4.0",
+    "express": "^4.17.1",
+    "express-fileupload": "^1.2.1",
     "help": "^3.0.2",
     "queue-system": "^3.0.2",
     "rimraf": "^3.0.2",

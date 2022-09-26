@@ -14,7 +14,7 @@ async function index(req, res)
 	const debug_tmp_folder = false
 
 	console.log('Received an alignment request!')
-	res.setTimeout(10* 3600 * 1000) //10 hours (in case we're stuck waiting in the queue)
+	res.setTimeout(10 * 3600 * 1000) //10 hours (in case we're stuck waiting in the queue)
 
 	if (!req.files || Object.keys(req.files).length === 0 || !req.files.hasOwnProperty('audio_file')) {
 		return res.status(400).send('audio_file is required')
