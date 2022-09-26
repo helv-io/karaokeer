@@ -5,9 +5,9 @@ COPY ["*.js", "index.html", "package.json", "/usr/src/app/"]
 RUN apt update && apt -y install ffmpeg nodejs zlib1g-dev wget python3 python2 python3-pip dos2unix git automake autoconf unzip sox gfortran libtool subversion npm zip unzip
 RUN npm install
 RUN pip3 install pydub scipy gdown
-RUN gdown PLACEHOLDER_ID
-RUN unzip NUSAutoLyrixAlign.zip
-RUN rm NUSAutoLyrixAlign.zip
+RUN gdown 1bFAsLTdAXqLAtMSWPvYIIjyq4Z6cIkrd
+RUN unzip NUSAutoLyrixAlign-patched.zip
+RUN rm NUSAutoLyrixAlign-patched.zip
 RUN git clone https://github.com/kaldi-asr/kaldi.git kaldi --origin upstream
 RUN (cd kaldi/tools && make -j `nproc`)
 RUN (cd kaldi/tools && extras/install_irstlm.sh)
