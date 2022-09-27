@@ -1,6 +1,6 @@
 FROM node:latest
 WORKDIR /usr/src/app
-COPY ["align.js", "index.ts", "index.html", "package.json", "/usr/src/app/"]
+COPY ["align.js", "index.ts", "index.html", "tsconfig.json", "package.json", "/usr/src/app/"]
 RUN npm install
 RUN npx tsc
 RUN apt update && apt -y install ffmpeg zlib1g-dev wget python3 python3-pip dos2unix git automake autoconf unzip sox gfortran libtool subversion
