@@ -1,9 +1,9 @@
 FROM node:latest
 WORKDIR /usr/src/app
 COPY ["align.js", "index.ts", "index.html", "package.json", "/usr/src/app/"]
-RUN apt update && apt -y install ffmpeg zlib1g-dev wget python3 python2 python3-pip dos2unix git automake autoconf unzip sox gfortran libtool subversion
 RUN npm install
 RUN npx tsc
+RUN apt update && apt -y install ffmpeg zlib1g-dev wget python3 python3-pip dos2unix git automake autoconf unzip sox gfortran libtool subversion
 RUN pip3 install pydub scipy gdown
 RUN gdown 1EkAjl_jX3z9pSigykyLzQw5nCsukekAn && tar -xf NUSAutoLyrixAlign-patched.tar.gz && rm NUSAutoLyrixAlign-patched.tar.gz
 RUN git clone https://github.com/kaldi-asr/kaldi.git kaldi --origin upstream
