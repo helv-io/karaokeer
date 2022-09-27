@@ -1,11 +1,12 @@
 const path = require('path')
 const fs = require('fs')
-const rimraf = require("rimraf")
+const rimraf = require('rimraf')
 const { exec } = require('child_process')
 const colors = require('colors/safe')
-const { queue } = require('./queue')
 const { transliterate } = require('transliteration')
 const yargs = require('yargs')
+const { Queue } = require('queue-system')
+const queue = new Queue()
 
 async function index(req, res)
 {
@@ -16,16 +17,16 @@ async function index(req, res)
 	console.log('Received an alignment request!')
 	res.setTimeout(10 * 3600 * 1000) //10 hours (in case we're stuck waiting in the queue)
 
-	if (!req.files || Object.keys(req.files).length === 0 || !req.files.hasOwnProperty('audio_file')) {
+	if (!req.files || Object.keys(req.files).length === 0 || !req.files['audio_file']) {
 		return res.status(400).send('audio_file is required')
 	}
 
-	if (!req.body || Object.keys(req.body).length === 0 || !req.body.hasOwnProperty('lyrics') || !req.body.lyrics) {
+	if (!req.body || Object.keys(req.body).length === 0 || !req.body['lyrics'] || !req.body.lyrics) {
 		return res.status(400).send('lyrics are required')
 	}
 
 	let format = 'json'
-	if (req.body.hasOwnProperty('format')) {
+	if (req.body['format']) {
 		if (!['raw', 'json'].includes(req.body.format))
 		return res.status(400).send('If included, format must be "raw" or "json".')
 		format = req.body.format
@@ -120,7 +121,7 @@ async function index(req, res)
 	catch (err)
 	{
 		rimraf(tmp_folder_path, () => { })
-		if (err && err.hasOwnProperty('message')) {
+		if (err && err['message']) {
 			console.log(colors.red('✖ ' + err.message))
 			return res.status(400).send(err.message)
 		} else {
@@ -146,7 +147,7 @@ function promisifiedExec(cmd, options = {})
 {
 	return new Promise((resolve, reject) =>
 	{
-		if (!options.hasOwnProperty('env')) options.env = process.env
+		if (!options['env']) options.env = process.env
 
 		const exec_process = exec(cmd, options, (error, stdout, stderr) =>
 		{
