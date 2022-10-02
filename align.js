@@ -346,6 +346,7 @@ function compile_json(original_lyrics, aligned_text)
 }
 
 function compile_ass(lyrics) {
+	lyrics = lyrics.filter(line => line != '')
 	const assHead = `
 [Script Info]
 Title: Lyrics
