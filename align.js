@@ -1,6 +1,7 @@
 const path = require('path')
 const fs = require('fs')
 const rimraf = require('rimraf')
+const dayjs = require('dayjs')
 const { exec } = require('child_process')
 const colors = require('colors/safe')
 const { transliterate } = require('transliteration')
@@ -25,10 +26,10 @@ async function index(req, res)
 		return res.status(400).send('lyrics are required')
 	}
 
-	let format = 'json'
+	let format = 'ass'
 	if (req.body['format']) {
-		if (!['raw', 'json'].includes(req.body.format))
-		return res.status(400).send('If included, format must be "raw" or "json".')
+		if (!['raw', 'json', 'ass'].includes(req.body.format))
+		return res.status(400).send('If included, format must be "raw", "json" or "ass".')
 		format = req.body.format
 	}
 
@@ -100,7 +101,7 @@ async function index(req, res)
 		//compile results...
 		if (format == 'json')
 		{
-			console.log("Finished alignment successfully! Compiling to JSON...")
+			console.log('Finished alignment successfully! Compiling to JSON...')
 			const results = compile_json(req.body.lyrics, aligned_text)
 
 			//remove tmp folder and return results...
@@ -108,9 +109,20 @@ async function index(req, res)
 			if (!debug_tmp_folder) rimraf(tmp_folder_path, () => { })
 			return res.status(200).json(results)
 		}
-		else
+		else if (format == 'ass')
 		{
-			console.log("Finished alignment successfully!")
+			console.log('Finished alignment successfully! Compiling to ASS...')
+			let results = compile_json(req.body.lyrics, aligned_text)
+			results = compile_ass(results)
+
+			//remove tmp folder and return results...
+			console.log(colors.green('✔') + ' Done!')
+			if (!debug_tmp_folder) rimraf(tmp_folder_path, () => { })
+			res.type('text/plain')
+			return res.status(200).send(results)
+		}
+		{
+			console.log('Finished alignment successfully!')
 
 			//remove tmp folder and return raw results...
 			console.log(colors.green('✔') + ' Done!')
@@ -331,6 +343,58 @@ function compile_json(original_lyrics, aligned_text)
 	}
 
 	return results
+}
+
+function compile_ass(lyrics) {
+	const assHead = `
+[Script Info]
+Title: Lyrics
+Original Script: AutoLyricsAlign
+ScriptType: v4.00+
+Collisions: Normal
+Timer: 100.0000
+WrapStyle: 1
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Default,Tahoma,24,&H00FF00FF,&H00000000,&H00FFFFFF,&HFF000000,-1,0,0,0,100,100,0,0,1,2,3,5,30,30,10,1
+
+[Events]
+Format: Layer, Start, End, Style, Actor, MarginL, MarginR, MarginV, Effect, Text
+`.trim()
+
+	let lines = []
+	lines.push(assHead)
+	lyrics.forEach((line, index, arr) => {
+		const startOfVerse = line[0].start
+		const endOfVerse = line[line.length - 1].end
+		const offset = startOfVerse > 1 ? 100 : startOfVerse * 100
+		const start = dayjs('1900-01-01').add(startOfVerse - (offset / 100), 'second').format('H:mm:ss.SSS').slice(0, -1)
+		const end = dayjs('1900-01-01').add(endOfVerse, 'second').format('H:mm:ss.SSS').slice(0, -1)
+		let verse = `Dialogue: 0,${start},${end},Default,,0000,0000,0000,,{\\K${offset}}`
+		
+		if (index < lyrics.length - 5) {
+			const startOfNextVerse = arr[index + 1][0].start
+			const gap = startOfNextVerse - endOfVerse
+			if (gap >= 4) {
+				const gapStart = dayjs('1900-01-01').add(startOfNextVerse - 5, 'second').format('H:mm:ss.SSS').slice(0, -1)
+				const gapEnd = dayjs('1900-01-01').add(startOfNextVerse, 'second').format('H:mm:ss.SSS').slice(0, -1)
+				lines.push(`Dialogue: 0,${gapStart},${gapEnd},Default,,0000,0000,0000,,{\\K500}🎵🎵🎵🎵🎵`)
+			}
+		}
+
+		line.forEach(word => {
+			const duration = Math.round(word.end * 100) - Math.round(word.start * 100)
+			if (duration) {
+				verse += `{\\K${duration}}${word.word}{\\K0} `
+			} else {
+				verse += `${word.word} `
+			}
+		})
+		lines.push(verse)
+	})
+	lines = lines.join('\r\n')
+	return lines
 }
 
 module.exports.index = index
