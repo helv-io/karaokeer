@@ -4,9 +4,8 @@ COPY ["align.js", "index.ts", "GeniusHandler.ts", "YouTubeHandler.ts", "index.ht
 RUN apt update && apt install -y curl
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && apt -y install ffmpeg zlib1g-dev wget python2 python3 python3-pip dos2unix git automake autoconf unzip sox gfortran libtool subversion nodejs libsndfile1 libsndfile1-dev
 RUN npm install
-RUN npm install -g spleeter
 RUN npx tsc
-RUN pip3 install pydub scipy gdown
+RUN pip3 install pydub scipy numpy gdown spleeter
 RUN gdown 1EkAjl_jX3z9pSigykyLzQw5nCsukekAn && tar -xvf NUSAutoLyrixAlign-patched.tar.gz && rm NUSAutoLyrixAlign-patched.tar.gz
 RUN git clone https://github.com/kaldi-asr/kaldi.git kaldi --origin upstream
 RUN (cd kaldi/tools && make -j `nproc` >/dev/null)

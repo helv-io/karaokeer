@@ -61,6 +61,9 @@ export const getGeniusSong = async function (geniusId: number | string, res: Res
     const vocalsFile = path.join(output, `${artist} - ${song} vocals.mp3`)
     const instrumentsFile = path.join(output, `${artist} - ${song} accompaniment.mp3`)
 
+    // All prerequisites look good
+    console.log(`Starting to process ${artist} - ${song}`)
+
     // Download all base files
     console.log('Downloading Video')
     await fs.writeFile(videoFile, await streamToPromise(ytdl(youtube.url, { quality: 'highest', filter: 'videoonly' })))
