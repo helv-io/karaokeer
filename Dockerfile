@@ -1,4 +1,4 @@
-FROM node:16
+FROM ubuntu:latest
 WORKDIR /usr/src/app
 COPY ["align.js", "index.ts", "GeniusHandler.ts", "YouTubeHandler.ts", "index.html", "tsconfig.json", "package.json", "/usr/src/app/"]
 RUN apt update && apt -y install ffmpeg zlib1g-dev wget python2 python3 python3-pip dos2unix git automake autoconf unzip sox gfortran libtool subversion libsndfile1 libsndfile1-dev
