@@ -107,6 +107,7 @@ export const getGeniusSong = async function (geniusId: number | string, res: Res
     await fs.writeFile(assFile, (await axios.post('http://127.0.0.1:3000/align', form)).data)
 
     console.log('All done!')
+    res.status(200).end(`${artist} - ${song} is ready to sing! Please refresh your library!`)
   } catch (error) {
     console.error(error)
     res.json(error).end()

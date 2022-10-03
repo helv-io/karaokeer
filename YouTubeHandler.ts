@@ -43,7 +43,7 @@ export const YTDownload = async (id: string, res: Response) => {
         await execPromise
         await fs.unlink(videoFile)
         await fs.unlink(audioFile)
-        res.status(200).end(`${artist} - ${song} downloaded successfully!`)
+        res.status(200).end(`${artist} - ${song} is ready to sing! Please refresh your library!`)
     } catch (error) {
         console.error(error)
         res.status(500).json(error).end()
