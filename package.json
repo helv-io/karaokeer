@@ -19,20 +19,16 @@
   "dependencies": {
     "@simplyhexagonal/exec": "^2.0.2",
     "axios": "^0.27.2",
-    "colors": "^1.4.0",
     "dayjs": "^1.11.5",
     "express": "^4.18.1",
     "express-fileupload": "^1.4.0",
     "form-data": "^4.0.0",
-    "help": "^3.0.2",
     "lyrics-searcher": "^1.0.58",
-    "multer": "^1.4.5-lts.1",
-    "queue-system": "^3.0.2",
     "rimraf": "^3.0.2",
     "stream-to-promise": "^3.0.0",
     "transliteration": "^2.3.5",
-    "yargs": "^17.5.1",
-    "ytdl-core": "^4.11.2"
+    "ytdl-core": "^4.11.2",
+    "ytsr": "^3.8.0"
   },
   "devDependencies": {
     "@types/express": "^4.17.14",
@@ -40,7 +36,6 @@
     "@types/node": "^18.7.23",
     "@types/rimraf": "^3.0.2",
     "@types/stream-to-promise": "^2.2.1",
-    "@types/yargs": "^17.0.13",
     "@typescript-eslint/eslint-plugin": "^5.38.1",
     "@typescript-eslint/parser": "^5.38.1",
     "eslint": "^8.24.0",

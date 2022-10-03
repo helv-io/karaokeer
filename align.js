@@ -3,11 +3,7 @@ const fs = require('fs')
 const rimraf = require('rimraf')
 const dayjs = require('dayjs')
 const { exec } = require('child_process')
-const colors = require('colors/safe')
 const { transliterate } = require('transliteration')
-const yargs = require('yargs')
-const { Queue } = require('queue-system')
-const queue = new Queue()
 
 async function index(req, res)
 {
@@ -51,7 +47,6 @@ async function index(req, res)
 
 	//make sure the lyrics still contain something...
 	if (lyrics == '') { throw new Error('The cleaned up lyrics are empty') }
-	if (yargs.argv.debug) { console.log('Cleaned lyrics: ' + lyrics) }
 
 	//ready a new tmp folder...
 	console.log('Moving lyrics and audio to a tmp folder...')
@@ -83,12 +78,7 @@ async function index(req, res)
 		//if we're not quickly debugging an existing alignment...
 		if (!debug_tmp_folder)
 		{
-			//add the processing task...
-			console.log('Adding alignment task to the queue...')
-			const task = queue.add(async () => { return await process(tmp_folder_name, req.files.audio_file.name) })
-
-			//wait for the alignment process to run...
-			await task.promise.catch((err) => { throw err })
+			await process(tmp_folder_name, req.files.audio_file.name).catch((err) => { throw err })
 		}
 
 		//check that the alignment.txt file exists and is not empty...
@@ -96,7 +86,6 @@ async function index(req, res)
 		if (fs.statSync(path.join(tmp_folder_path, 'aligned.txt')).size < 50) throw new Error('Alignment appears to have failed. The aligned.txt file is empty.')
 		const aligned_text = fs.readFileSync(path.join(tmp_folder_path, 'aligned.txt'), 'utf8')
 		if (aligned_text.length < 10) throw new Error('Alignment appears to have failed. The raw aligned text is empty.')
-		if (yargs.argv.debug) console.log('Raw Aligned Lyrics: ' + aligned_text)
 
 		//compile results...
 		if (format == 'json')
@@ -105,7 +94,7 @@ async function index(req, res)
 			const results = compile_json(req.body.lyrics, aligned_text)
 
 			//remove tmp folder and return results...
-			console.log(colors.green('✔') + ' Done!')
+			console.log('✔ Done!')
 			if (!debug_tmp_folder) rimraf(tmp_folder_path, () => { })
 			return res.status(200).json(results)
 		}
@@ -116,7 +105,7 @@ async function index(req, res)
 			results = compile_ass(results)
 
 			//remove tmp folder and return results...
-			console.log(colors.green('✔') + ' Done!')
+			console.log('✔ Done!')
 			if (!debug_tmp_folder) rimraf(tmp_folder_path, () => { })
 			res.type('text/plain')
 			return res.status(200).send(results)
@@ -125,7 +114,7 @@ async function index(req, res)
 			console.log('Finished alignment successfully!')
 
 			//remove tmp folder and return raw results...
-			console.log(colors.green('✔') + ' Done!')
+			console.log('✔ Done!')
 			if (!debug_tmp_folder) rimraf(tmp_folder_path, () => { })
 			return res.status(200).send(aligned_text)
 		}
@@ -134,10 +123,10 @@ async function index(req, res)
 	{
 		rimraf(tmp_folder_path, () => { })
 		if (err && err['message']) {
-			console.log(colors.red('✖ ' + err.message))
+			console.log(`✖ ${err.message}`)
 			return res.status(400).send(err.message)
 		} else {
-			console.log(colors.red('✖ An unexpected error occurred while aligning the lyrics'))
+			console.log('✖ An unexpected error occurred while aligning the lyrics')
 			return res.status(400).send('An unexpected error occurred while aligning the lyrics')
 		}
 	}
@@ -169,12 +158,6 @@ function promisifiedExec(cmd, options = {})
 			}
 			resolve(stdout)
 		})
-
-		if (yargs.argv.debug)
-		{
-			exec_process.stdout.on('data', (data) => { console.log(data.toString()) })
-			exec_process.stderr.on('data', (data) => { 'ERROR: ' + console.log(data.toString()) })
-		}
 	})
 }
 
@@ -271,12 +254,6 @@ function compile_json(original_lyrics, aligned_text)
 				{
 					if (aligned_word_count >= aligned_text_array.length)
 					{
-						if (yargs.argv.debug)
-						{
-							console.log('Where did we go wrong...')
-							console.log(results)
-						}
-
 						throw new Error('Could not compile results. We\'ve somehow gone over the raw word count of ' + aligned_text_array.length + ' at word ' + aligned_word)
 					}
 
@@ -334,12 +311,6 @@ function compile_json(original_lyrics, aligned_text)
 
 	if (aligned_word_count != aligned_text_array.length)
 	{
-		if (yargs.argv.debug)
-		{
-			console.log('Where did we go wrong...')
-			console.log(results)
-		}
-
 		throw new Error('Could not compile results. The aligned word count (' + aligned_word_count + ') does not match the raw word count (' + aligned_text_array.length + ')')
 	}
 
