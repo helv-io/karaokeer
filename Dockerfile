@@ -1,7 +1,8 @@
 FROM ubuntu:latest
 WORKDIR /usr/src/app
 COPY ["align.js", "index.ts", "GeniusHandler.ts", "YouTubeHandler.ts", "index.html", "tsconfig.json", "package.json", "/usr/src/app/"]
-RUN apt update && apt -y install ffmpeg zlib1g-dev wget python2 python3 python3-pip dos2unix git automake autoconf unzip sox gfortran libtool subversion libsndfile1 libsndfile1-dev
+RUN apt update && apt install -y curl
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && apt -y install ffmpeg zlib1g-dev wget python2 python3 python3-pip dos2unix git automake autoconf unzip sox gfortran libtool subversion nodejs libsndfile1 libsndfile1-dev
 RUN npm install
 RUN npx tsc
 RUN pip3 install pydub scipy numpy gdown spleeter
