@@ -197,6 +197,7 @@ function compile_json(original_lyrics, aligned_text)
 	let compiled_line = []
 	let lines = original_lyrics
 	lines = lines.replace(/`/mg, '\'') //replace backtick with single quote
+	lines = lines.replace(/\n\s*\n/g, '\n') //replace multiple line breaks with one
 	lines = lines.split(/\r\n|\r|\n/) //split into array of lines
 	lines.forEach(line =>
 	{
