@@ -4,7 +4,8 @@
   "description": "An API wrapper for chitralekha18/AutoLyrixAlign",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "docker": "docker build -t helvio/lyrix . && docker push helvio/lyrix:latest"
   },
   "repository": {
     "type": "git",

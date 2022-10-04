@@ -5,8 +5,7 @@ const dayjs = require('dayjs')
 const { exec } = require('child_process')
 const { transliterate } = require('transliteration')
 
-async function index(req, res)
-{
+async function index(req, res) {
 	//used to quickly debug an existing tmp folder with already aligned lyrics...
 	// const debug_tmp_folder = 'gnSRiFzFnPoD8UZA'
 	const debug_tmp_folder = false
@@ -67,7 +66,7 @@ async function index(req, res)
 	try
 	{
 		//attempt to create the new tmp folder...
-		await fs.mkdirSync(tmp_folder_path, { recursive: true })
+		fs.mkdirSync(tmp_folder_path, { recursive: true })
 
 		//save lyrics to tmp file...
 		fs.writeFileSync(path.join(tmp_folder_path, 'lyrics.txt'), lyrics)
@@ -88,8 +87,7 @@ async function index(req, res)
 		if (aligned_text.length < 10) throw new Error('Alignment appears to have failed. The raw aligned text is empty.')
 
 		//compile results...
-		if (format == 'json')
-		{
+		if (format == 'json') {
 			console.log('Finished alignment successfully! Compiling to JSON...')
 			const results = compile_json(req.body.lyrics, aligned_text)
 
@@ -98,8 +96,7 @@ async function index(req, res)
 			if (!debug_tmp_folder) rimraf(tmp_folder_path, () => { })
 			return res.status(200).json(results)
 		}
-		else if (format == 'ass')
-		{
+		else if (format == 'ass') {
 			console.log('Finished alignment successfully! Compiling to ASS...')
 			let results = compile_json(req.body.lyrics, aligned_text)
 			results = compile_ass(results)
@@ -109,8 +106,7 @@ async function index(req, res)
 			if (!debug_tmp_folder) rimraf(tmp_folder_path, () => { })
 			res.type('text/plain')
 			return res.status(200).send(results)
-		}
-		{
+		} else {
 			console.log('Finished alignment successfully!')
 
 			//remove tmp folder and return raw results...
@@ -123,7 +119,7 @@ async function index(req, res)
 	{
 		rimraf(tmp_folder_path, () => { })
 		if (err && err['message']) {
-			console.log(`✖ ${err.message}`)
+				console.log(`✖ ${err.message}`)
 			return res.status(400).send(err.message)
 		} else {
 			console.log('✖ An unexpected error occurred while aligning the lyrics')
@@ -132,46 +128,37 @@ async function index(req, res)
 	}
 }
 
-function random_str(length = 16)
-{
+function random_str(length = 16) {
 	var result = ''
 	var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
 	var charactersLength = characters.length
-	for (var i = 0; i < length; i++)
-	{
+	for (var i = 0; i < length; i++) {
 		result += characters.charAt(Math.floor(Math.random() * charactersLength))
 	}
 	return result
 }
 
-function promisifiedExec(cmd, options = {})
-{
-	return new Promise((resolve, reject) =>
-	{
+function promisifiedExec(cmd, options = {}) {
+	return new Promise((resolve, reject) =>	{
 		if (!options['env']) options.env = process.env
-
-		const exec_process = exec(cmd, options, (error, stdout, stderr) =>
-		{
-			if (error)
-			{
+		const exec_process = exec(cmd, options, (error, stdout, stderr) => {
+			if (error) {
+				console.error(error)
 				reject(error)
 			}
+			console.log(stdout)
 			resolve(stdout)
 		})
 	})
 }
 
-async function process(tmp_folder_name, audio_file_name)
-{
-	console.log('Aligning lyrics (this will take awhile)...')
-
-	const cmd = './RunAlignment.sh ../tmp/' + tmp_folder_name + '/' + audio_file_name + ' ../tmp/' + tmp_folder_name + '/lyrics.txt ../tmp/' + tmp_folder_name + '/aligned.txt'
-
+async function process(tmp_folder_name, audio_file_name) {
+	console.log('Aligning lyrics (this will take a while)...')
+	const cmd = `./RunAlignment.sh ${__dirname}/tmp/${tmp_folder_name}/${audio_file_name} ${__dirname}/tmp/${tmp_folder_name}/lyrics.txt ${__dirname}/tmp/${tmp_folder_name}/aligned.txt`
 	await promisifiedExec(cmd, { cwd: '/NUSAutoLyrixAlign/'})
 }
 
-function compile_json(original_lyrics, aligned_text)
-{
+function compile_json(original_lyrics, aligned_text) {
 	const aligned_text_array = aligned_text.trim().split(/\r\n|\r|\n/) //turn aligned text into a more easily accessible array by index
 	let aligned_word_count = 0
 	let song_start = null
@@ -182,23 +169,20 @@ function compile_json(original_lyrics, aligned_text)
 	lines = lines.replace(/`/mg, '\'') //replace backtick with single quote
 	lines = lines.replace(/\n\s*\n/g, '\n') //replace multiple line breaks with one
 	lines = lines.split(/\r\n|\r|\n/) //split into array of lines
-	lines.forEach(line =>
-	{
+	lines.forEach(line => {
 		compiled_line = []
 		line = line.replace(/\s/mg, ' ') //change all white-space characters to a normal space
 		line = line.replace(/ +/mg, ' ') //collapse multiple spaces into one
 		line = line.trim()
 
 		//if this is an empty line, skip it...
-		if (line == '')
-		{
+		if (line == '') {
 			results.push(compiled_line)
 			return
 		}
 
 		//if this is a song part identifier line like [Chorus], skip it...
-		if (line.match(/^\[.*\]$/) !== null)
-		{
+		if (line.match(/^\[.*\]$/) !== null) {
 			compiled_line.push({
 				word: line,
 				processed_words: '',
@@ -210,21 +194,18 @@ function compile_json(original_lyrics, aligned_text)
 			return
 		}
 
-		//split by spaces or things like *breathes* or (woo woo), with the delimiters included in the results...
+		//split by spaces or things like *breathes* or (woo woo), with the delimiters included in the results...                
 		let words = line.split(/(\*.+\*|\([^\)\n\r]+\)| )/)
-		words.forEach(word =>
-		{
+		words.forEach(word => {
 			word = word.trim()
 
 			//if the word is empty, skip it completely...
-			if (word == '')
-			{
+			if (word == '') {
 				return
 			}
 
 			//if this is something like *breathes* or (woo), include it in the results with no timestamp...
-			if (word.match(/\*.+\*|\([^\)\n\r]+\)/) !== null)
-			{
+			if (word.match(/\*.+\*|\([^\)\n\r]+\)/) !== null) {
 				compiled_line.push({
 					word: word,
 					processed_words: '',
@@ -247,13 +228,10 @@ function compile_json(original_lyrics, aligned_text)
 			aligned_words = aligned_words.replace(/ +/mg, ' ') //collapse multiple spaces into one
 			aligned_words = aligned_words.trim() //punctuation will be turned into spaces, so need to trim that now
 			aligned_words = aligned_words.split(' ') //split by spaces
-			aligned_words.forEach(aligned_word =>
-			{
+			aligned_words.forEach(aligned_word => {
 				aligned_word = aligned_word.trim() //shouldn't be necessary, but just in case
-				if (aligned_word !== '')
-				{
-					if (aligned_word_count >= aligned_text_array.length)
-					{
+				if (aligned_word !== '') {
+					if (aligned_word_count >= aligned_text_array.length) {
 						throw new Error('Could not compile results. We\'ve somehow gone over the raw word count of ' + aligned_text_array.length + ' at word ' + aligned_word)
 					}
 
@@ -288,10 +266,8 @@ function compile_json(original_lyrics, aligned_text)
 
 	//fill in missing starts by going from start to finish...
 	let prev_end = song_start
-	for(let line_x = 0; line_x < results.length; line_x++)
-	{
-		for(let word_x = 0; word_x < results[line_x].length; word_x++)
-		{
+	for(let line_x = 0; line_x < results.length; line_x++) {
+		for(let word_x = 0; word_x < results[line_x].length; word_x++) {
 			if (results[line_x][word_x].start === null) results[line_x][word_x].start = prev_end
 			if (results[line_x][word_x].end !== null) prev_end = results[line_x][word_x].end
 		}
@@ -299,18 +275,14 @@ function compile_json(original_lyrics, aligned_text)
 
 	//fill in missing ends by going from finish to start...
 	let prev_start = song_end
-	for (let line_x = results.length - 1; line_x >= 0; line_x--)
-	{
-		for (let word_x = results[line_x].length - 1; word_x >= 0; word_x--)
-		{
+	for (let line_x = results.length - 1; line_x >= 0; line_x--) {
+		for (let word_x = results[line_x].length - 1; word_x >= 0; word_x--) {
 			if (results[line_x][word_x].end === null) results[line_x][word_x].end = prev_start
 			if (results[line_x][word_x].start !== null) prev_start = results[line_x][word_x].start
 		}
 	}
 
-
-	if (aligned_word_count != aligned_text_array.length)
-	{
+	if (aligned_word_count != aligned_text_array.length) {
 		throw new Error('Could not compile results. The aligned word count (' + aligned_word_count + ') does not match the raw word count (' + aligned_text_array.length + ')')
 	}
 
@@ -345,7 +317,7 @@ Format: Layer, Start, End, Style, Actor, MarginL, MarginR, MarginV, Effect, Text
 		const start = dayjs('1900-01-01').add(startOfVerse - (offset / 100), 'second').format('H:mm:ss.SSS').slice(0, -1)
 		const end = dayjs('1900-01-01').add(endOfVerse, 'second').format('H:mm:ss.SSS').slice(0, -1)
 		let verse = `Dialogue: 0,${start},${end},Default,,0000,0000,0000,,{\\K${offset}}`
-		
+
 		if (index < lyrics.length - 5) {
 			const startOfNextVerse = arr[index + 1][0].start
 			const gap = startOfNextVerse - endOfVerse

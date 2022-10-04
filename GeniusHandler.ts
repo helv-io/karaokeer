@@ -41,9 +41,12 @@ export const getGeniusSong = async function (geniusId: number | string, res: Res
     const artist = track.primary_artist.name
     const song = track.title
     if (!youtube) {
-      res.status(406).end(`No YouTube link provided for ${artist} - ${song}. Unable to continue.`)
+      res.status(406).end(`No YouTube link available for ${artist} - ${song}. Unable to continue.`)
       return
     }
+
+    // All prerequisites look good
+    console.log(`Starting to process ${artist} - ${song}`)
 
     // Downloading lyrics
     console.log('Fetching Lyrics')
@@ -52,6 +55,7 @@ export const getGeniusSong = async function (geniusId: number | string, res: Res
       res.status(404).end(`Lyrics for ${artist} - ${song} not found.`)
       return
     }
+    console.log('Lyrics Found')
   
     // All file names
     const videoFile = path.join(output, `${artist} - ${song}.mov`)
@@ -60,9 +64,6 @@ export const getGeniusSong = async function (geniusId: number | string, res: Res
     const karaokeFile = path.join(output, `${artist} - ${song}.mp4`)
     const vocalsFile = path.join(output, `${artist} - ${song} vocals.mp3`)
     const instrumentsFile = path.join(output, `${artist} - ${song} accompaniment.mp3`)
-
-    // All prerequisites look good
-    console.log(`Starting to process ${artist} - ${song}`)
 
     // Download all base files
     console.log('Downloading Video')
