@@ -167,7 +167,7 @@ async function process(tmp_folder_name, audio_file_name)
 
 	const cmd = './RunAlignment.sh ../tmp/' + tmp_folder_name + '/' + audio_file_name + ' ../tmp/' + tmp_folder_name + '/lyrics.txt ../tmp/' + tmp_folder_name + '/aligned.txt'
 
-	await promisifiedExec(cmd, { cwd: '/NUSAutoLyrixAlign'})
+	await promisifiedExec(cmd, { cwd: '/NUSAutoLyrixAlign/'})
 }
 
 function compile_json(original_lyrics, aligned_text)
