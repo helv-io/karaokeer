@@ -5,21 +5,21 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "docker": "docker build -t helvio/lyrix . && docker push helvio/lyrix:latest"
+    "docker": "docker buildx build --push --platform linux/amd64,linux/arm64 --tag helvio/karaokeer:latest ."
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/Helvio88/lyrix.git"
+    "url": "git+ssh://git@github.com/helv-io/karaokeer.git"
   },
   "author": "Helvio88",
   "license": "GPL-3.0-or-later",
   "bugs": {
-    "url": "https://github.com/Helvio88/lyrix/issues"
+    "url": "https://github.com/helv-io/karaokeer/issues"
   },
-  "homepage": "https://github.com/Helvio88/lyrix#readme",
+  "homepage": "https://github.com/helv-io/karaokeer#readme",
   "dependencies": {
     "@simplyhexagonal/exec": "^2.0.2",
-    "axios": "^0.27.2",
+    "axios": "^1.0.0",
     "dayjs": "^1.11.5",
     "express": "^4.18.1",
     "express-fileupload": "^1.4.0",
@@ -34,7 +34,7 @@
   "devDependencies": {
     "@types/express": "^4.17.14",
     "@types/express-fileupload": "^1.4.1",
-    "@types/node": "^18.8.1",
+    "@types/node": "^18.8.2",
     "@types/rimraf": "^3.0.2",
     "@types/stream-to-promise": "^2.2.1",
     "@typescript-eslint/eslint-plugin": "^5.39.0",
