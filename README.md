@@ -1,4 +1,4 @@
-# AutoLyrixAlign Service
+# Karaokeer Service
 ### Accurate word-level alignment of lyrics to polyphonic audio
 
 This is a Docker wrapper around [chitralekha18/AutoLyrixAlign](https://github.com/chitralekha18/AutoLyrixAlign) and [gazugafan/AutoLyrixAlignService](https://github.com/gazugafan/AutoLyrixAlignService)
@@ -11,7 +11,7 @@ All the real work is done by the system developed at [chitralekha18/AutoLyrixAli
 * **Disk Space**. You'll need about 16GB free to automatically download and extract the necessary data files. After the initial setup, about a 13GB footprint will remain used.
 
 ## Installation
-* `docker run --name lyrix -p 3000:3000 helvio/lyrix`
+* `docker run -d --name karaokeer -p 3000:3000 helvio/karaokeer`
 
 ## Usage
 With the server running, you should be able to open `localhost:3000` in your browser (adjust the port and domain for however you set things up). This will bring you to a simple page where you can test out the API. Select a file, enter lyrics, and submit the form. You should see some simple logs output in the server console, and after a few minutes you should get the results back in the browser!
