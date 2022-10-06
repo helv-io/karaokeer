@@ -8,7 +8,7 @@ import path from 'path'
 
 export const YTSearch = async (query: string, res: Response) => {
   try {
-    const results = await YouTubeSearch(query, {limit: 50 })
+    const results = await YouTubeSearch(`${query} karaoke`, {limit: 50 })
     const videos: Video[] = []
     results.items.forEach(item => {
       if (item.type === 'video' && !item.isLive)
