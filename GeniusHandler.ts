@@ -86,6 +86,7 @@ export const getGeniusSong = async function (geniusId: number | string, res: Res
                         mv "${path.join(output, `${artist} - ${song}_Vocals.wav`)}" "${vocalsFile}" &&
                         mv "${path.join(output, `${artist} - ${song}_Instruments.wav`)}" "${instrumentsFile}"
                       )`
+      console.log(cmd)
       const { execProcess, execPromise } = exec(cmd)
       await execPromise
     }
