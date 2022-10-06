@@ -1,4 +1,4 @@
-import YouTubeSearch from 'ytsr'
+import YouTubeSearch, { Video } from 'ytsr'
 import ytdl from 'ytdl-core'
 import streamToPromise from 'stream-to-promise'
 import exec from '@simplyhexagonal/exec'
@@ -8,7 +8,28 @@ import path from 'path'
 
 export const YTSearch = async (query: string, res: Response) => {
   try {
-    res.status(200).json(await YouTubeSearch(query))
+    const results = await YouTubeSearch(query, {limit: 50 })
+    const videos: Video[] = []
+    results.items.forEach(item => {
+      if (item.type === 'video' && !item.isLive)
+        videos.push(<Video> item)
+    })
+    res.status(200).json(
+      videos.slice(0,10).map(
+      (item) => {
+        return {
+          id: item.id,
+          type: 'youtube',
+          views: item.views,
+          title: item.title,
+          artist: item.author?.name || 'No Author',
+          titleImage: item.bestThumbnail?.url || null,
+          authorImage: item.author?.bestAvatar?.url || null,
+          duration: item.duration,
+          created: item.uploadedAt
+        }
+      })
+    )
   } catch (error) {
     console.error(error)
     res.json(error).end()
