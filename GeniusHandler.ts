@@ -62,8 +62,8 @@ export const getGeniusSong = async function (geniusId: number | string, res: Res
     const audioFile = path.join(output, `${artist} - ${song}.webm`)
     const assFile = path.join(output, `${artist} - ${song}.ass`)
     const karaokeFile = path.join(output, `${artist} - ${song}.mp4`)
-    const vocalsFile = path.join(output, `${artist} - ${song}_Vocals.wav`)
-    const instrumentsFile = path.join(output, `${artist} - ${song}_Instruments.wav`)
+    const vocalsFile = path.join(output, `${artist} - ${song} vocals.mp3`)
+    const instrumentsFile = path.join(output, `${artist} - ${song} accompaniment.mp3`)
 
     // Download all base files
     console.log('Downloading Video')
@@ -73,8 +73,19 @@ export const getGeniusSong = async function (geniusId: number | string, res: Res
 
     console.log('Splitting Instruments and Vocals')
     {
-      const cmd = `(cd /vocal-remover && python /vocal-remover/inference.py -i "${audioFile}" -o "${output}")`
-      console.log(cmd)
+      // Use spleeter if available, otherwise fall back to (slow) vocal-remover
+      // If using vocal-remover, move files to what they're expected to be.
+      const cmd = `spleeter
+                      separate -o "${output}"
+                      -c mp3
+                      -f "{filename} {instrument}.{codec}"
+                      "${audioFile}"
+                      ||
+                      (cd /vocal-remover &&
+                        python /vocal-remover/inference.py -i "${audioFile}" -o "${output}" &&
+                        mv "${path.join(output, `${artist} - ${song}_Vocals.wav`)}" "${vocalsFile}" &&
+                        mv "${path.join(output, `${artist} - ${song}_Instruments.wav`)}" "${instrumentsFile}"
+                      )`
       const { execProcess, execPromise } = exec(cmd)
       await execPromise
     }
