@@ -23,6 +23,20 @@
 	<style>
 		.ytst {
 			max-width: 90px;
+			position: relative;
+		}
+
+		.time {
+			position: absolute;
+			bottom: 0px;
+			right: 12px;
+			background: black;
+			font-size: 10px;
+			font-weight: bold;
+			color: white;
+			padding: 0px 2px;
+			line-height: 12px;
+		}
 		}
 
 		.yt-info {
@@ -162,7 +176,7 @@
 			httpGetAsync("/youtube/" + item.id);
 			$('.typeahead').typeahead('val', '');
 		})
-	
+
 
 		var ytSearch = new Bloodhound({
 			datumTokenizer: Bloodhound.tokenizers.obj.whitespace('title'),
@@ -186,7 +200,7 @@
 					'</div>'
 				].join('\n'),
 				suggestion: function (data) {
-					return '<div class="row"><div class="ytst"><img class="img-fluid" src="//img.youtube.com/vi/' + data.id + '/default.jpg"></div><div class="col"><div class="row"><div class="col yt-title">' + data.title + '</div></div><div class="row"><div class="col yt-info">' + kFormatter(data.views) + ' views &#8226; ' + data.created + '<br>' + data.artist + '</div></div></div></div>';
+					return '<div class="row"><div class="ytst"><div class="time">' + data.duration + '</div><img class="img-fluid" src="//img.youtube.com/vi/' + data.id + '/default.jpg"></div><div class="col"><div class="row"><div class="col yt-title">' + data.title + '</div></div><div class="row"><div class="col yt-info">' + kFormatter(data.views) + ' views &#8226; ' + data.created + '<br>' + data.artist + '</div></div></div></div>';
 
 				}
 			}
