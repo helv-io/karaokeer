@@ -146,7 +146,6 @@ function promisifiedExec(cmd, options = {}) {
 				console.error(error)
 				reject(error)
 			}
-			console.log(stdout)
 			resolve(stdout)
 		})
 	})

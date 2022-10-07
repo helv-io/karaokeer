@@ -49,9 +49,13 @@ export const getGeniusSong = async function (geniusId: number | string, res: Res
     }
     
     // Success Exit function
-    const end = () => {
+    const end = async () => {
       if(isAligned && isJoined) {
         console.log('All done!')
+        await fs.unlink(videoFile)
+        await fs.unlink(vocalsFile)
+        await fs.unlink(instrumentsFile)
+        await fs.unlink(audioFile)
         res.status(200).end(`${artist} - ${song} is ready to sing! Please refresh your library!`)
       }
     }
@@ -114,10 +118,8 @@ export const getGeniusSong = async function (geniusId: number | string, res: Res
                   -y "${karaokeFile}"`
       exec(join).execPromise.then(async joinRes => {
         console.log('Video and Audio Joined Successfully!')
-        await fs.unlink(videoFile)
-        await fs.unlink(vocalsFile)
-        await fs.unlink(instrumentsFile)
         isJoined = true
+        end()
       })
     })
 
@@ -126,7 +128,6 @@ export const getGeniusSong = async function (geniusId: number | string, res: Res
     form.append('lyrics', lyrics)
     form.append('format', 'ass')
     form.append('audio_file', await fs.readFile(audioFile), `${artist} - ${song}.webm`)
-    await fs.unlink(audioFile)
     axios.post('http://127.0.0.1:3000/align', form).then(async alignRes => {
       isAligned = true
       const result: string = alignRes.data
