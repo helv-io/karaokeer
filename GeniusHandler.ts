@@ -9,13 +9,16 @@ import FormData from 'form-data'
 import { Response } from 'express'
 
 export const getGeniusSong = async function (geniusId: number | string, res: Response) {
+  
   if (typeof geniusId === 'string') {
     geniusId = Number.parseInt(geniusId)
   }
   const output: string = process.env.KARAOKE_OUTPUT || '/media/karaoke'
   const geniusApi = process.env.GENIUS_API || ''
   const header: AxiosRequestConfig = { headers: {'Authorization': `Bearer ${geniusApi}`} }
-  const axios = new Axios(header)
+  const axios = new Axios(header) 
+  let isJoined: boolean = false
+  let isAligned: boolean = false
 
   try {
     // Get Track information from Genius and extract Artist, Song and URL
@@ -43,6 +46,18 @@ export const getGeniusSong = async function (geniusId: number | string, res: Res
     if (!youtube) {
       res.status(406).end(`No YouTube link available for ${artist} - ${song}. Unable to continue.`)
       return
+    }
+    
+    // Success Exit function
+    const end = async () => {
+      if(isAligned && isJoined) {
+        console.log('All done!')
+        await fs.unlink(videoFile)
+        await fs.unlink(vocalsFile)
+        await fs.unlink(instrumentsFile)
+        await fs.unlink(audioFile)
+        res.status(200).end(`${artist} - ${song} is ready to sing! Please refresh your library!`)
+      }
     }
 
     // All prerequisites look good
@@ -72,15 +87,24 @@ export const getGeniusSong = async function (geniusId: number | string, res: Res
     await fs.writeFile(audioFile, await streamToPromise(ytdl(youtube.url, { quality: 'highest', filter: 'audioonly' })))
 
     console.log('Splitting Instruments and Vocals')
-    {
-      const cmd = `spleeter separate -o "${output}" -c mp3 -f "{filename} {instrument}.{codec}" "${audioFile}"`
-      const { execProcess, execPromise } = exec(cmd)
-      await execPromise
-    }
-  
-    console.log('Joining Video and Audio tracks')
-    {
-      const cmd = `ffmpeg \
+    
+    // Use spleeter if available, otherwise fall back to (slow) vocal-remover
+    // If using vocal-remover, move files to what they're expected to be.
+    const split = `spleeter \
+                  separate -o "${output}" \
+                  -c mp3 \
+                  -f "{filename} {instrument}.{codec}" \
+                  "${audioFile}" \
+                  || \
+                  (cd /vocal-remover && \
+                    python /vocal-remover/inference.py -i "${audioFile}" -o "${output}" && \
+                    mv "${path.join(output, `${artist} - ${song}_Vocals.wav`)}" "${vocalsFile}" && \
+                    mv "${path.join(output, `${artist} - ${song}_Instruments.wav`)}" "${instrumentsFile}"
+                  )`;
+
+    exec(split).execPromise.then(async splitRes => {
+      console.log('Joining Video and Audio tracks')
+      const join = `ffmpeg \
                   -i "${videoFile}" \
                   -i "${instrumentsFile}" \
                   -i "${vocalsFile}" \
@@ -92,23 +116,27 @@ export const getGeniusSong = async function (geniusId: number | string, res: Res
                   -metadata:s:a:2 Title=All \
                   -c:v copy -c:a aac \
                   -y "${karaokeFile}"`
-      const { execProcess, execPromise } = exec(cmd)
-      await execPromise
-      await fs.unlink(videoFile)
-      await fs.unlink(vocalsFile)
-      await fs.unlink(instrumentsFile)
-    }
+      exec(join).execPromise.then(async joinRes => {
+        console.log('Video and Audio Joined Successfully!')
+        isJoined = true
+        end()
+      })
+    })
 
     console.log('Aligning Lyrics')
     const form = new FormData()
     form.append('lyrics', lyrics)
     form.append('format', 'ass')
     form.append('audio_file', await fs.readFile(audioFile), `${artist} - ${song}.webm`)
-    await fs.unlink(audioFile)
+    axios.post('http://127.0.0.1:3000/align', form).then(async alignRes => {
+      isAligned = true
+      const result: string = alignRes.data
+      if (result.length < 500) throw new Error('Alignment failed. Please check the logs.')
+      await fs.writeFile(assFile, result)
+      end()
+    })
     await fs.writeFile(assFile, (await axios.post('http://127.0.0.1:3000/align', form)).data)
 
-    console.log('All done!')
-    res.status(200).end(`${artist} - ${song} is ready to sing! Please refresh your library!`)
   } catch (error) {
     console.error(error)
     res.json(error).end()
