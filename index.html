@@ -176,14 +176,13 @@
 			httpGetAsync("/youtube/" + item.id);
 			$('.typeahead').typeahead('val', '');
 		})
-
+ 
 
 		var ytSearch = new Bloodhound({
 			datumTokenizer: Bloodhound.tokenizers.obj.whitespace('title'),
 			queryTokenizer: Bloodhound.tokenizers.whitespace,
-			//	prefetch: 'http://38.242.130.195:3000/youtube/search/billy',
 			remote: {
-				url: 'http://38.242.130.195:3000/youtube/search/%QUERY',
+				url: '/youtube/search/%QUERY',
 				wildcard: '%QUERY'
 			}
 		});
