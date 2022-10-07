@@ -75,17 +75,17 @@ export const getGeniusSong = async function (geniusId: number | string, res: Res
     {
       // Use spleeter if available, otherwise fall back to (slow) vocal-remover
       // If using vocal-remover, move files to what they're expected to be.
-      const cmd = `spleeter
-                      separate -o "${output}"
-                      -c mp3
-                      -f "{filename} {instrument}.{codec}"
-                      "${audioFile}"
-                      ||
-                      (cd /vocal-remover &&
-                        python /vocal-remover/inference.py -i "${audioFile}" -o "${output}" &&
-                        mv "${path.join(output, `${artist} - ${song}_Vocals.wav`)}" "${vocalsFile}" &&
-                        mv "${path.join(output, `${artist} - ${song}_Instruments.wav`)}" "${instrumentsFile}"
-                      )`
+      const cmd = `spleeter \
+                    separate -o "${output}" \
+                    -c mp3 \
+                    -f "{filename} {instrument}.{codec}" \
+                    "${audioFile}" \
+                    || \
+                    (cd /vocal-remover && \
+                      python /vocal-remover/inference.py -i "${audioFile}" -o "${output}" && \
+                      mv "${path.join(output, `${artist} - ${song}_Vocals.wav`)}" "${vocalsFile}" && \
+                      mv "${path.join(output, `${artist} - ${song}_Instruments.wav`)}" "${instrumentsFile}"
+                    )`
       console.log(cmd)
       const { execProcess, execPromise } = exec(cmd)
       await execPromise
