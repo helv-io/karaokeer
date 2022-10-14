@@ -7,6 +7,7 @@ import exec from '@simplyhexagonal/exec'
 import { Axios, AxiosRequestConfig } from 'axios'
 import FormData from 'form-data'
 import { Response } from 'express'
+import { safename } from 'safename'
 
 export const getGeniusSong = async function (geniusId: number | string, res: Response) {
   
@@ -41,8 +42,8 @@ export const getGeniusSong = async function (geniusId: number | string, res: Res
     }
     const track = JSON.parse(geniusResponse.data).response.song
     const youtube = track.media.find((m: { provider: string, url: string }) => m.provider === 'youtube')
-    const artist = track.primary_artist.name
-    const song = track.title
+    const artist = safename(track.primary_artist.name, ' ')
+    const song = safename(track.title, ' ')
     if (!youtube) {
       res.status(406).end(`No YouTube link available for ${artist} - ${song}. Unable to continue.`)
       return
