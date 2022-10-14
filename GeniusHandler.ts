@@ -42,8 +42,8 @@ export const getGeniusSong = async function (geniusId: number | string, res: Res
     }
     const track = JSON.parse(geniusResponse.data).response.song
     const youtube = track.media.find((m: { provider: string, url: string }) => m.provider === 'youtube')
-    const artist = safename(track.primary_artist.name, ' ')
-    const song = safename(track.title, ' ')
+    let artist: string = track.primary_artist.name
+    let song: string = track.title
     if (!youtube) {
       res.status(406).end(`No YouTube link available for ${artist} - ${song}. Unable to continue.`)
       return
@@ -60,6 +60,12 @@ export const getGeniusSong = async function (geniusId: number | string, res: Res
         res.status(200).end(`${artist} - ${song} is ready to sing! Please refresh your library!`)
       }
     }
+
+    const invalidChars = ['@','$','%','&','\\','/',':','*','?','”','‘','<','>','|','~','`','#','^','+','=','{','}','[',']',';','!','’']
+    const validChars   = [' at ','S','pc',' and ','_','_','-','_','_','',' ','(',')','-','-','','_','-','-','-','(',')','(',')','-','_','']
+
+    artist = artist.replace('’', '\'')
+    song = song.replace('’', '\'')
 
     // All prerequisites look good
     console.log(`Starting to process ${artist} - ${song}`)
