@@ -64,8 +64,10 @@ export const getGeniusSong = async function (geniusId: number | string, res: Res
     const invalidChars = ['@','$','%','&','\\','/',':','*','?','”','‘','<','>','|','~','`','#','^','+','=','{','}','[',']',';','!','’']
     const validChars   = [' at ','S','pc',' and ','_','_','-','_','_','',' ','(',')','-','-','','_','-','-','-','(',')','(',')','-','_','']
 
-    artist = artist.replace('’', '\'')
-    song = song.replace('’', '\'')
+    invalidChars.forEach((_c, i) => {
+      artist = artist.replace(invalidChars[i], validChars[i])
+      song = song.replace(invalidChars[i], validChars[i])
+    });
 
     // All prerequisites look good
     console.log(`Starting to process ${artist} - ${song}`)
