@@ -1,36 +1,73 @@
-import LyricsSearcher from 'lyrics-searcher'
-import fs from 'fs/promises'
-import ytdl from 'ytdl-core'
-import path from 'path'
-import streamToPromise from 'stream-to-promise'
 import exec from '@simplyhexagonal/exec'
 import { Axios, AxiosRequestConfig } from 'axios'
-import FormData from 'form-data'
 import { Response } from 'express'
-import { safename } from 'safename'
+import FormData from 'form-data'
+import fs from 'fs/promises'
+import * as Genius from 'genius-lyrics'
+import LyricsSearcher from 'lyrics-searcher'
+import path from 'path'
+import streamToPromise from 'stream-to-promise'
+import ytdl from 'ytdl-core'
+import { ignorePromiseErrors } from './index'
+import { Job, Jobs } from './Job'
 
-export const getGeniusSong = async function (geniusId: number | string, res: Response) {
-  
-  if (typeof geniusId === 'string') {
-    geniusId = Number.parseInt(geniusId)
+const client = new Genius.Client(process.env.GENIUS_API || '')
+
+export const GeniusSearch = async (query: string, maxResults: number) => {
+  try {
+    const results = await client.songs.search(query, { sanitizeQuery: true })
+    return results.slice(0, maxResults).map((song) => {
+      return {
+        id: song.id.toString(),
+        type: 'genius',
+        views: <number>song._raw?.stats?.pageviews || null,
+        title: song.title,
+        artist: song.artist.name,
+        titleImage: song.image || null,
+        authorImage: song.artist.image || null,
+        duration: <string>song._raw?.duration || null,
+        created: <string>song._raw?.release_date_for_display || null
+      }
+    })
+  } catch (error) {
+    console.error(error)
   }
+}
+
+export const getGeniusSong = async (
+  geniusId: string | string,
+  res: Response
+) => {
+  // Avoid processing same ID
+  if (Jobs.find((j) => j.id === geniusId)) {
+    res.redirect(`/status/${geniusId}`)
+    return
+  }
+
   const output: string = process.env.KARAOKE_OUTPUT || '/media/karaoke'
   const geniusApi = process.env.GENIUS_API || ''
-  const header: AxiosRequestConfig = { headers: {'Authorization': `Bearer ${geniusApi}`} }
-  const axios = new Axios(header) 
+  const header: AxiosRequestConfig = {
+    headers: { Authorization: `Bearer ${geniusApi}` }
+  }
+  const axios = new Axios(header)
   let isJoined: boolean = false
   let isAligned: boolean = false
+  const job = new Job(geniusId)
 
   try {
     // Get Track information from Genius and extract Artist, Song and URL
-    const geniusResponse = await axios.get(`https://api.genius.com/songs/${geniusId}`)
-    
+    const geniusResponse = await axios.get(
+      `https://api.genius.com/songs/${geniusId}`
+    )
+
     // Reject invalid requests
     if (geniusResponse.status !== 200) {
       res.status(geniusResponse.status)
       switch (geniusResponse.status) {
         case 401:
-          res.end(`Genius API Key is Invalid: ${geniusApi}\nPlease provide a valid key through env var GENIUS_API`)
+          res.end(
+            `Genius API Key is Invalid: ${geniusApi}\nPlease provide a valid key through env var GENIUS_API`
+          )
           break
         case 404:
           res.end(`Song with ID ${geniusId} not found.`)
@@ -41,62 +78,106 @@ export const getGeniusSong = async function (geniusId: number | string, res: Res
       return
     }
     const track = JSON.parse(geniusResponse.data).response.song
-    const youtube = track.media.find((m: { provider: string, url: string }) => m.provider === 'youtube')
+    const youtube = track.media.find(
+      (m: { provider: string; url: string }) => m.provider === 'youtube'
+    )
     let artist: string = track.primary_artist.name
     let song: string = track.title
     if (!youtube) {
-      res.status(406).end(`No YouTube link available for ${artist} - ${song}. Unable to continue.`)
+      res
+        .status(406)
+        .end(
+          `No YouTube link available for ${artist} - ${song}. Unable to continue.`
+        )
       return
     }
-    
-    // Success Exit function
-    const end = async () => {
-      if(isAligned && isJoined) {
+
+    // Exit functions
+    const success = async () => {
+      if (isAligned && isJoined) {
         console.log('All done!')
-        await fs.unlink(videoFile)
-        await fs.unlink(vocalsFile)
-        await fs.unlink(instrumentsFile)
-        await fs.unlink(audioFile)
-        res.status(200).end(`${artist} - ${song} is ready to sing! Please refresh your library!`)
+        await Promise.all(
+          [
+            fs.unlink(videoFile),
+            fs.unlink(vocalsFile),
+            fs.unlink(instrumentsFile),
+            fs.unlink(audioFile)
+          ].map(ignorePromiseErrors)
+        )
+        job.finishedOn = new Date(Date.now())
+        job.success = true
+        job.status = 'Done'
+        job.sync()
       }
     }
 
-    const invalidChars = ['@','$','%','&','\\','/',':','*','?','”','‘','<','>','|','~','`','#','^','+','=','{','}','[',']',';','!','’']
-    const validChars   = [' at ','S','pc',' and ','_','_','-','_','_','',' ','(',')','-','-','','_','-','-','-','(',')','(',')','-','_','']
-
-    invalidChars.forEach((_c, i) => {
-      artist = artist.replace(invalidChars[i], validChars[i])
-      song = song.replace(invalidChars[i], validChars[i])
-    });
+    const failure = async (status: string) => {
+      console.log('All done!')
+      await Promise.all(
+        [
+          fs.unlink(videoFile),
+          fs.unlink(audioFile),
+          fs.unlink(vocalsFile),
+          fs.unlink(instrumentsFile),
+          fs.unlink(assFile),
+          fs.unlink(karaokeFile)
+        ].map(ignorePromiseErrors)
+      )
+      job.finishedOn = new Date(Date.now())
+      job.success = false
+      job.status = status
+      job.sync()
+    }
 
     // All prerequisites look good
     console.log(`Starting to process ${artist} - ${song}`)
+
+    artist = artist.safeName()
+    song = song.safeName()
+
+    // Push Job instance and return to browser
+    job.name = `${artist} - ${song}`
+    Jobs.push(job)
+    res.redirect(`/status/${geniusId}`)
 
     // Downloading lyrics
     console.log('Fetching Lyrics')
     const lyrics = (await LyricsSearcher(artist, song)).replaceAll('\n', '\r\n')
     if (!lyrics) {
-      res.status(404).end(`Lyrics for ${artist} - ${song} not found.`)
+      failure('Lyrics not found')
       return
     }
     console.log('Lyrics Found')
-  
+
     // All file names
     const videoFile = path.join(output, `${artist} - ${song}.mov`)
     const audioFile = path.join(output, `${artist} - ${song}.webm`)
     const assFile = path.join(output, `${artist} - ${song}.ass`)
     const karaokeFile = path.join(output, `${artist} - ${song}.mp4`)
     const vocalsFile = path.join(output, `${artist} - ${song} vocals.mp3`)
-    const instrumentsFile = path.join(output, `${artist} - ${song} accompaniment.mp3`)
+    const instrumentsFile = path.join(
+      output,
+      `${artist} - ${song} accompaniment.mp3`
+    )
 
     // Download all base files
     console.log('Downloading Video')
-    await fs.writeFile(videoFile, await streamToPromise(ytdl(youtube.url, { quality: 'highest', filter: 'videoonly' })))
+    await fs.writeFile(
+      videoFile,
+      await streamToPromise(
+        ytdl(youtube.url, { quality: 'highest', filter: 'videoonly' })
+      )
+    )
     console.log('Downloading Audio')
-    await fs.writeFile(audioFile, await streamToPromise(ytdl(youtube.url, { quality: 'highest', filter: 'audioonly' })))
+    await fs.writeFile(
+      audioFile,
+      await streamToPromise(
+        ytdl(youtube.url, { quality: 'highest', filter: 'audioonly' })
+      )
+    )
 
     console.log('Splitting Instruments and Vocals')
-    
+
     // Use spleeter if available, otherwise fall back to (slow) vocal-remover
     // If using vocal-remover, move files to what they're expected to be.
     const split = `spleeter \
@@ -107,11 +188,17 @@ export const getGeniusSong = async function (geniusId: number | string, res: Res
                   || \
                   (cd /vocal-remover && \
                     python /vocal-remover/inference.py -i "${audioFile}" -o "${output}" && \
-                    mv "${path.join(output, `${artist} - ${song}_Vocals.wav`)}" "${vocalsFile}" && \
-                    mv "${path.join(output, `${artist} - ${song}_Instruments.wav`)}" "${instrumentsFile}"
-                  )`;
+                    mv "${path.join(
+                      output,
+                      `${artist} - ${song}_Vocals.wav`
+                    )}" "${vocalsFile}" && \
+                    mv "${path.join(
+                      output,
+                      `${artist} - ${song}_Instruments.wav`
+                    )}" "${instrumentsFile}"
+                  )`
 
-    exec(split).execPromise.then(async splitRes => {
+    exec(split).execPromise.then(async (_splitRes) => {
       console.log('Joining Video and Audio tracks')
       const join = `ffmpeg \
                   -i "${videoFile}" \
@@ -125,10 +212,10 @@ export const getGeniusSong = async function (geniusId: number | string, res: Res
                   -metadata:s:a:2 Title=All \
                   -c:v copy -c:a aac \
                   -y "${karaokeFile}"`
-      exec(join).execPromise.then(async joinRes => {
+      exec(join).execPromise.then(async (_joinRes) => {
         console.log('Video and Audio Joined Successfully!')
         isJoined = true
-        end()
+        success()
       })
     })
 
@@ -136,18 +223,34 @@ export const getGeniusSong = async function (geniusId: number | string, res: Res
     const form = new FormData()
     form.append('lyrics', lyrics)
     form.append('format', 'ass')
-    form.append('audio_file', await fs.readFile(audioFile), `${artist} - ${song}.webm`)
-    axios.post('http://127.0.0.1:3000/align', form).then(async alignRes => {
+    form.append(
+      'audio_file',
+      await fs.readFile(audioFile),
+      `${artist} - ${song}.webm`
+    )
+    axios.post('http://127.0.0.1:3000/align', form).then(async (alignRes) => {
       isAligned = true
       const result: string = alignRes.data
-      if (result.length < 500) throw new Error('Alignment failed. Please check the logs.')
+      if (result.length < 500) {
+        failure('Alignment failed. Please check the logs.')
+        return
+      }
       await fs.writeFile(assFile, result)
-      end()
+      success()
     })
-    await fs.writeFile(assFile, (await axios.post('http://127.0.0.1:3000/align', form)).data)
-
+    await fs.writeFile(
+      assFile,
+      (
+        await axios.post('http://127.0.0.1:3000/align', form)
+      ).data
+    )
   } catch (error) {
+    job.finishedOn = new Date(Date.now())
+    job.status = JSON.stringify(error)
+    job.success = false
+    job.sync()
     console.error(error)
-    res.json(error).end()
   }
 }
+
+export const searchGenius = (query: string, res: Response) => {}
