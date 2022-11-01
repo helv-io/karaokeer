@@ -44,14 +44,11 @@ export const YTDownload = async (id: string, res: Response) => {
   try {
     const output: string = process.env.KARAOKE_OUTPUT || '/media/karaoke'
     const youtube = await ytdl.getInfo(id)
-    let artist = youtube.player_response.videoDetails.author
-    let song = youtube.player_response.videoDetails.title
+    const artist = youtube.player_response.videoDetails.author.safeName()
+    const song = youtube.player_response.videoDetails.title.safeName()
     const videoFile = path.join(output, `${artist} - ${song}.mov`)
     const audioFile = path.join(output, `${artist} - ${song}.webm`)
     const karaokeFile = path.join(output, `${song}.mp4`)
-
-    artist = artist.safeName()
-    song = song.safeName()
 
     // Push Job instance and return to browser
     job.name = `${artist} - ${song}`
