@@ -85,6 +85,7 @@ export const YTDownload = async (id: string, res: Response) => {
     await exec(cmd).execPromise
     await fs.unlink(videoFile)
     await fs.unlink(audioFile)
+    job.success = true
     job.status = 'Done'
   } catch (error) {
     console.error(error)
