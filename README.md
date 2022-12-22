@@ -16,16 +16,11 @@ All the real work is done by the system developed at [chitralekha18/AutoLyrixAli
 
 ## Installation
 
-- `docker run -d --name karaokeer -p 3000:3000 helvio/karaokeer`
+- `docker run -d --name karaokeer -v /home/user/karaoke:/media/karaoke -p 3000:3000 helvio/karaokeer`
 
-## Usage
+## Environment Variables
 
-With the server running, you should be able to open `localhost:3000` in your browser (adjust the port and domain for however you set things up). This will bring you to a simple page where you can test out the API. Select a file, enter lyrics, and submit the form. You should see some simple logs output in the server console, and after a few minutes you should get the results back in the browser!
-
-To use the service programatically, just send a POST request to `/align` the same way the form does. Be sure to set the `Content-Type` header to `multipart/form-data`. The POST parameters are...
-
-- `audio_file` The polyphonic audio file to align with. Can be MP3, WAV, etc.
-- `lyrics` The lyrics to align. Can include any sort of newline characters you like, special characters, song part identification lines (like [Chorus]), backup lines (like (woo) or \*breathes\*), etc. Anything you throw at it should work.
-- `format` What format you'd like the results returned in. Can be set to `raw`, `json`, `ass` (defaults to `json`). `raw` gives you the results directly from the alignment process. `json` massages those results into an array of lines and words that should match back up to the original lyrics supplied. `ass` gives you an Advanced Substation Alpha subtitle file.
-
-You can also get the current version with a GET request to `/version`.
+| Variable                   | Description                           | Default        |
+| -------------------------- | ------------------------------------- | -------------- |
+| KARAOKE_OUTPUT             | Folder to save Karaoke files          | /media/karaoke |
+| GENIUS_API                 | Genius API Key                        | (blank)        |
