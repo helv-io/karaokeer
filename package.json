@@ -1,8 +1,8 @@
 {
-  "name": "lyrix",
+  "name": "karaokeer",
   "version": "1.1.0",
   "description": "An API wrapper for chitralekha18/AutoLyrixAlign",
-  "main": "index.js",
+  "main": "index.ts",
   "scripts": {
     "dev": "nodemon index.ts"
   },
