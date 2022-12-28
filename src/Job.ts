@@ -7,7 +7,8 @@ export class Job {
     public status = 'Accepted',
     public requestedOn = new Date(Date.now()),
     public name?: string,
-    public finishedOn?: Date
+    public finishedOn?: Date,
+    public file?: string
   ) {}
 
   sync = () => {

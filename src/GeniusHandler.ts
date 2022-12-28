@@ -6,6 +6,7 @@ import fs from 'fs/promises'
 import * as Genius from 'genius-lyrics'
 import LyricsSearcher from 'lyrics-searcher'
 import path from 'path'
+import sanitize from 'sanitize-filename'
 import streamToPromise from 'stream-to-promise'
 import ytdl from 'ytdl-core'
 import { ignorePromiseErrors } from './index'
@@ -132,8 +133,8 @@ export const getGeniusSong = async (
     // All prerequisites look good
     console.log(`Starting to process ${artist} - ${song}`)
 
-    artist = artist.safeName()
-    song = song.safeName()
+    artist = sanitize(artist, { replacement: '_' }).replaceAll('-', '_')
+    song = sanitize(song, { replacement: '_' }).replaceAll('-', '_')
 
     // Push Job instance and return to browser
     job.name = `${artist} - ${song}`

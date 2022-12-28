@@ -6,6 +6,8 @@ import streamToPromise from 'stream-to-promise'
 import ytdl from 'ytdl-core'
 import YouTubeSearch, { Video } from 'ytsr'
 import { Job, Jobs } from './Job'
+import sanitize from 'sanitize-filename'
+import * as os from 'os'
 
 export const YTSearch = async (query: string, maxResults: number) => {
   try {
@@ -42,20 +44,31 @@ export const YTDownload = async (id: string, res: Response) => {
   // Create a job and proceed
   const job = new Job(id)
   try {
-    const output: string = process.env.KARAOKE_OUTPUT || '/media/karaoke'
     const youtube = await ytdl.getInfo(id)
-    const artist = youtube.player_response.videoDetails.author.safeName()
-    const song = youtube.player_response.videoDetails.title.safeName()
-    const videoFile = path.join(output, `${artist} - ${song}.mov`)
-    const audioFile = path.join(output, `${artist} - ${song}.webm`)
+    if (!youtube) {
+      res.end(`YouTube ID ${id} not found`)
+    }
+  
+    // Create all variables and sanitize them
+    const output: string = process.env.KARAOKE_OUTPUT || '/media/karaoke'
+    const artist = sanitize(youtube.player_response.videoDetails.author, { replacement: '_' }).replaceAll('-', '_')
+    const song = sanitize(youtube.player_response.videoDetails.title, { replacement: '_' }).replaceAll('-', '_')
+    const videoFile = path.join(os.tmpdir(), `${artist} - ${song}.mov`)
+    const audioFile = path.join(os.tmpdir(), `${artist} - ${song}.webm`)
     const karaokeFile = path.join(output, `${song}.mp4`)
+    let timeout = false
 
     // Push Job instance and return to browser
     job.name = `${artist} - ${song}`
     Jobs.push(job)
-    res.redirect(`/status/${id}`)
 
-    // Download all base files
+    // Set a timeout in case the processing is not finished
+    setTimeout(() => {
+      timeout = true
+      if (!job.success) { res.redirect(`/status/${id}`) }
+    }, 10000)
+
+    // Download and join files
     console.log('Downloading Video')
     await fs.writeFile(
       videoFile,
@@ -80,10 +93,20 @@ export const YTDownload = async (id: string, res: Response) => {
                     -c:v copy -c:a aac \
                     -y "${karaokeFile}"`
     await exec(cmd).execPromise
+
+    // Cleanup
     await fs.unlink(videoFile)
     await fs.unlink(audioFile)
+
+    // Mark job as successful and add metadata
+    console.log('Done!')
+    console.log(karaokeFile)
     job.success = true
     job.status = 'Done'
+    job.file = karaokeFile
+
+    // Redirect to status page
+    if (!timeout) { res.json(job).end() }
   } catch (error) {
     console.error(error)
     res.status(500).json(error).end()

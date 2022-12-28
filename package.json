@@ -10,6 +10,7 @@
     "type": "git",
     "url": "git+ssh://git@github.com/helv-io/karaokeer.git"
   },
+  "private": "true",
   "author": "Helvio88",
   "license": "GPL-3.0-or-later",
   "bugs": {
@@ -18,15 +19,15 @@
   "homepage": "https://github.com/helv-io/karaokeer#readme",
   "dependencies": {
     "@simplyhexagonal/exec": "^2.0.2",
-    "axios": "^1.1.2",
-    "dayjs": "^1.11.5",
+    "axios": "^1.2.1",
+    "dayjs": "^1.11.7",
     "express": "^4.18.2",
     "express-fileupload": "^1.4.0",
     "form-data": "^4.0.0",
-    "genius-lyrics": "^4.4.0",
+    "genius-lyrics": "^4.4.2",
     "lyrics-searcher": "^1.0.58",
     "rimraf": "^3.0.2",
-    "safename": "^2.0.0",
+    "sanitize-filename": "^1.6.3",
     "stream-to-promise": "^3.0.0",
     "transliteration": "^2.3.5",
     "tsx": "^3.12.1",
@@ -34,20 +35,20 @@
     "ytsr": "^3.8.0"
   },
   "devDependencies": {
-    "@types/express": "^4.17.14",
+    "@types/express": "^4.17.15",
     "@types/express-fileupload": "^1.4.1",
-    "@types/node": "^18.8.5",
+    "@types/node": "^18.11.18",
     "@types/rimraf": "^3.0.2",
     "@types/stream-to-promise": "^2.2.1",
-    "@typescript-eslint/eslint-plugin": "^5.40.0",
-    "@typescript-eslint/parser": "^5.40.0",
-    "eslint": "^8.25.0",
+    "@typescript-eslint/eslint-plugin": "^5.47.1",
+    "@typescript-eslint/parser": "^5.47.1",
+    "eslint": "^8.30.0",
     "eslint-config-prettier": "^8.5.0",
-    "eslint-plugin-jsdoc": "^39.3.6",
+    "eslint-plugin-jsdoc": "^39.6.4",
     "eslint-plugin-prefer-arrow": "^1.2.3",
-    "prettier": "2.7.1",
-    "prettier-plugin-organize-imports": "^3.1.1",
+    "prettier": "2.8.1",
+    "prettier-plugin-organize-imports": "^3.2.1",
     "ts-node": "^10.9.1",
-    "typescript": "^4.8.4"
+    "typescript": "^4.9.4"
   }
 }
