@@ -3,7 +3,6 @@ import FileUpload from 'express-fileupload'
 import path from 'path'
 import { GeniusSearch, getGeniusSong } from './GeniusHandler'
 import { Jobs } from './Job'
-import './string.extensions'
 import { YTDownload, YTSearch } from './YouTubeHandler'
 const align = require('./align')
 
