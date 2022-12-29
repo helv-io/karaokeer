@@ -96,10 +96,10 @@ export const getGeniusSong = async (
         console.log('All done!')
         await Promise.all(
           [
-            fs.unlink(videoFile),
-            fs.unlink(vocalsFile),
-            fs.unlink(instrumentsFile),
-            fs.unlink(audioFile)
+            // fs.unlink(videoFile),
+            // fs.unlink(vocalsFile),
+            // fs.unlink(instrumentsFile),
+            // fs.unlink(audioFile)
           ].map(ignorePromiseErrors)
         )
         job.finishedOn = new Date(Date.now())
@@ -113,12 +113,12 @@ export const getGeniusSong = async (
       console.log('All done!')
       await Promise.all(
         [
-          fs.unlink(videoFile),
-          fs.unlink(audioFile),
-          fs.unlink(vocalsFile),
-          fs.unlink(instrumentsFile),
-          fs.unlink(assFile),
-          fs.unlink(karaokeFile)
+          // fs.unlink(videoFile),
+          // fs.unlink(audioFile),
+          // fs.unlink(vocalsFile),
+          // fs.unlink(instrumentsFile),
+          // fs.unlink(assFile),
+          // fs.unlink(karaokeFile)
         ].map(ignorePromiseErrors)
       )
       job.finishedOn = new Date(Date.now())
