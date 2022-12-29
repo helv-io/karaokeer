@@ -149,7 +149,7 @@ function promisifiedExec(cmd, options = {}) {
 
 async function process(tmp_folder_name, audio_file_name) {
 	console.log('Aligning lyrics (this will take a while)...')
-	const cmd = `./RunAlignment.sh ${__dirname}/tmp/${tmp_folder_name}/${audio_file_name} ${__dirname}/tmp/${tmp_folder_name}/lyrics.txt ${__dirname}/tmp/${tmp_folder_name}/aligned.txt`
+	const cmd = `./RunAlignment.sh "${__dirname}/tmp/${tmp_folder_name}/${audio_file_name}" ${__dirname}/tmp/${tmp_folder_name}/lyrics.txt ${__dirname}/tmp/${tmp_folder_name}/aligned.txt`
 	console.log(cmd)
 	await promisifiedExec(cmd, { cwd: '/NUSAutoLyrixAlign/' })
 }
