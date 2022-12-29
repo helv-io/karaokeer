@@ -56,12 +56,10 @@ export const getGeniusSong = async (
       `https://api.genius.com/songs/${geniusId}`, { headers: header }
     )).json()
 
-    console.log('Genius Response:', geniusResponse)
-
     // Reject invalid requests
-    if (geniusResponse.status !== 200) {
-      res.status(geniusResponse.status)
-      switch (geniusResponse.status) {
+    if (geniusResponse.meta.status !== 200) {
+      res.status(geniusResponse.meta.status)
+      switch (geniusResponse.meta.status) {
         case 401:
           res.end(
             `Genius API Key is Invalid: ${geniusApi}\nPlease provide a valid key through env var GENIUS_API`
@@ -75,7 +73,7 @@ export const getGeniusSong = async (
       }
       return
     }
-    const track = JSON.parse(geniusResponse.data).response.song
+    const track = geniusResponse.response.song
     const youtube = track.media.find(
       (m: { provider: string; url: string }) => m.provider === 'youtube'
     )
