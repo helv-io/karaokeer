@@ -10,6 +10,7 @@ import { GeniusLyrics } from 'genius-discord-lyrics'
 import { ignorePromiseErrors } from './index'
 import { Job, Jobs } from './Job'
 import { Align } from './align'
+import os from 'os'
 
 const client = new Genius.Client(process.env.GENIUS_API || '')
 const genius = new GeniusLyrics(process.env.GENIUS_API || '')
@@ -148,12 +149,12 @@ export const getGeniusSong = async (
     console.log('Lyrics Found')
 
     // All file names
-    const videoFile = path.join(output, `${artist} - ${song}.mov`)
-    const audioFile = path.join(output, `${artist} - ${song}.webm`)
+    const videoFile = path.join(os.tmpdir(), `${artist} - ${song}.mov`)
+    const audioFile = path.join(os.tmpdir(), `${artist} - ${song}.webm`)
     const assFile = path.join(output, `${artist} - ${song}.ass`)
     const karaokeFile = path.join(output, `${artist} - ${song}.mp4`)
-    const vocalsFile = path.join(output, `${artist} - ${song} vocals.mp3`)
-    const instrumentsFile = path.join(output, `${artist} - ${song} accompaniment.mp3`)
+    const vocalsFile = path.join(os.tmpdir(), `${artist} - ${song} vocals.mp3`)
+    const instrumentsFile = path.join(os.tmpdir(), `${artist} - ${song} accompaniment.mp3`)
 
     // Download all base files
     console.log('Downloading Video')
