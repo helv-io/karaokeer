@@ -2,15 +2,16 @@ import exec from '@simplyhexagonal/exec'
 import { Response } from 'express'
 import fs from 'fs/promises'
 import * as Genius from 'genius-lyrics'
-import LyricsGrabber from 'lyrics-grabber'
 import path from 'path'
 import sanitize from 'sanitize-filename'
 import streamToPromise from 'stream-to-promise'
 import ytdl from 'ytdl-core'
+import { GeniusLyrics } from 'genius-discord-lyrics'
 import { ignorePromiseErrors } from './index'
 import { Job, Jobs } from './Job'
 
 const client = new Genius.Client(process.env.GENIUS_API || '')
+const genius = new GeniusLyrics(process.env.GENIUS_API || '')
 
 export const GeniusSearch = async (query: string, maxResults: number) => {
   try {
@@ -138,7 +139,7 @@ export const getGeniusSong = async (
 
     // Downloading lyrics
     console.log('Fetching Lyrics')
-    const lyrics = (await LyricsGrabber.getLyrics(`${artist} - ${song}`)).lyrics.join().replaceAll('\n', '\r\n')
+    const lyrics = (<string>(await genius.fetchLyrics(job.name)) || '').replaceAll('\n', '\r\n')
     if (!lyrics) {
       failure('Lyrics not found')
       return
