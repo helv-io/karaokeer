@@ -177,15 +177,15 @@ export const getGeniusSong = async (
     // Use spleeter if available, otherwise fall back to (slow) vocal-remover
     // If using vocal-remover, move files to what they're expected to be.
     const split = `spleeter \
-                  separate -o "${output}" \
+                  separate -o "${os.tmpdir()}" \
                   -c mp3 \
                   -f "{filename} {instrument}.{codec}" \
                   "${audioFile}" \
                   || \
                   (cd /vocal-remover && \
-                    python /vocal-remover/inference.py -i "${audioFile}" -o "${output}" && \
-                    mv "${path.join(output, `${artist} - ${song}_Vocals.wav`)}" "${vocalsFile}" && \
-                    mv "${path.join(output, `${artist} - ${song}_Instruments.wav`)}" "${instrumentsFile}"
+                    python /vocal-remover/inference.py -i "${audioFile}" -o "${os.tmpdir()}" && \
+                    mv "${path.join(os.tmpdir(), `${artist} - ${song}_Vocals.wav`)}" "${vocalsFile}" && \
+                    mv "${path.join(os.tmpdir(), `${artist} - ${song}_Instruments.wav`)}" "${instrumentsFile}"
                   )`
 
     exec(split).execPromise.then(async (_splitRes) => {
@@ -210,18 +210,13 @@ export const getGeniusSong = async (
     })
 
     console.log('Aligning Lyrics')
-    const form = new FormData()
-    form.append('lyrics', lyrics)
-    form.append('format', 'ass')
-    form.append('audio_file', audioFile)
-
     const alignRes = await Align(lyrics, audioFile, job.name)
-    isAligned = true
     if (alignRes.length < 500) {
       failure('Alignment failed. Please check the logs.')
       job.success = false
       return
     }
+    isAligned = true
     await fs.writeFile(assFile, alignRes)
     await success()
   } catch (error) {
