@@ -1,6 +1,6 @@
 FROM helvio/kaldi:latest
 WORKDIR /usr/src/app
-ADD src package*.json /usr/src/app/
-RUN npm i --omit=dev
+ADD ["tmp/dist.js", "src/index.html", "/usr/src/app/"]
 EXPOSE 3000
-ENTRYPOINT ["npx","tsx","index.ts"]
+ENTRYPOINT ["node"]
+CMD ["dist.js"]

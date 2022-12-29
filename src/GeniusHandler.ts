@@ -2,7 +2,7 @@ import exec from '@simplyhexagonal/exec'
 import { Response } from 'express'
 import fs from 'fs/promises'
 import * as Genius from 'genius-lyrics'
-import LyricsSearcher from 'lyrics-searcher'
+import LyricsGrabber from 'lyrics-grabber'
 import path from 'path'
 import sanitize from 'sanitize-filename'
 import streamToPromise from 'stream-to-promise'
@@ -138,7 +138,7 @@ export const getGeniusSong = async (
 
     // Downloading lyrics
     console.log('Fetching Lyrics')
-    const lyrics = (await LyricsSearcher(artist, song)).replaceAll('\n', '\r\n')
+    const lyrics = (await LyricsGrabber.getLyrics(`${artist} - ${song}`)).lyrics.join().replaceAll('\n', '\r\n')
     if (!lyrics) {
       failure('Lyrics not found')
       return
