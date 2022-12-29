@@ -24,7 +24,6 @@ Starting service...`)
         `${process.env.npm_package_name} ${process.env.npm_package_version}`
       )
   )
-  app.post('/align', align.index)
   app.get('/genius/:id', (req, res) => {
     getGeniusSong(req.params.id, res)
   })
