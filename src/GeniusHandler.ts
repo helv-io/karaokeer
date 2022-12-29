@@ -56,6 +56,8 @@ export const getGeniusSong = async (
       `https://api.genius.com/songs/${geniusId}`, { headers: header }
     )).json()
 
+    console.log('Genius Response:', geniusResponse)
+
     // Reject invalid requests
     if (geniusResponse.status !== 200) {
       res.status(geniusResponse.status)
