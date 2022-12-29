@@ -69,12 +69,9 @@ async function index(req, res) {
 		//save lyrics to tmp file...
 		fs.writeFileSync(path.join(tmp_folder_path, 'lyrics.txt'), lyrics)
 
-		//copy the audio file to the tmp folder...
-		fs.copyFileSync(req.body.audio_file, path.join(tmp_folder_path, req.body.audio_file.split('/').pop()))
-
 		//if we're not quickly debugging an existing alignment...
 		if (!debug_tmp_folder) {
-			await process(tmp_folder_name, req.body.audio_file.split('/').pop()).catch((err) => { throw err })
+			await process(tmp_folder_name, req.body.audio_file).catch((err) => { throw err })
 		}
 
 		//check that the alignment.txt file exists and is not empty...
@@ -149,7 +146,7 @@ function promisifiedExec(cmd, options = {}) {
 
 async function process(tmp_folder_name, audio_file_name) {
 	console.log('Aligning lyrics (this will take a while)...')
-	const cmd = `./RunAlignment.sh "${__dirname}/tmp/${tmp_folder_name}/${audio_file_name}" ${__dirname}/tmp/${tmp_folder_name}/lyrics.txt ${__dirname}/tmp/${tmp_folder_name}/aligned.txt`
+	const cmd = `./RunAlignment.sh "${audio_file_name}" ${__dirname}/tmp/${tmp_folder_name}/lyrics.txt ${__dirname}/tmp/${tmp_folder_name}/aligned.txt`
 	console.log(cmd)
 	await promisifiedExec(cmd, { cwd: '/NUSAutoLyrixAlign/' })
 }

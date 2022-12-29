@@ -1,20 +1,13 @@
 import express from 'express'
-import FileUpload from 'express-fileupload'
 import path from 'path'
 import { GeniusSearch, getGeniusSong } from './GeniusHandler'
 import { Jobs } from './Job'
 import { YTDownload, YTSearch } from './YouTubeHandler'
 const align = require('./align')
 
-const app = express()
+const app = express();
 
-app.use(
-  FileUpload({
-    createParentPath: true,
-    safeFileNames: true
-  })
-)
-;(async () => {
+(async () => {
   console.log(`
 =============
 = Karaokeer =
