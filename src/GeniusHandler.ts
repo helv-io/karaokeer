@@ -1,7 +1,5 @@
 import exec from '@simplyhexagonal/exec'
-import { Axios, AxiosRequestConfig } from 'axios'
 import { Response } from 'express'
-import FormData from 'form-data'
 import fs from 'fs/promises'
 import * as Genius from 'genius-lyrics'
 import LyricsSearcher from 'lyrics-searcher'
@@ -47,19 +45,16 @@ export const getGeniusSong = async (
 
   const output: string = process.env.KARAOKE_OUTPUT || '/media/karaoke'
   const geniusApi = process.env.GENIUS_API || ''
-  const header: AxiosRequestConfig = {
-    headers: { Authorization: `Bearer ${geniusApi}` }
-  }
-  const axios = new Axios(header)
+  const header = new Headers({Authorization: `Bearer ${geniusApi}`})
   let isJoined: boolean = false
   let isAligned: boolean = false
   const job = new Job(geniusId)
 
   try {
     // Get Track information from Genius and extract Artist, Song and URL
-    const geniusResponse = await axios.get(
-      `https://api.genius.com/songs/${geniusId}`
-    )
+    const geniusResponse = await(await fetch(
+      `https://api.genius.com/songs/${geniusId}`, { headers: header }
+    )).json()
 
     // Reject invalid requests
     if (geniusResponse.status !== 200) {
@@ -226,25 +221,20 @@ export const getGeniusSong = async (
     form.append('format', 'ass')
     form.append(
       'audio_file',
-      await fs.readFile(audioFile),
+      await (await fs.readFile(audioFile)).toString(),
       `${artist} - ${song}.webm`
     )
-    axios.post('http://127.0.0.1:3000/align', form).then(async (alignRes) => {
+    const alignRes = await((await fetch('http://127.0.0.1:3000/align', {method: 'POST', body: form})).text())
       isAligned = true
-      const result: string = alignRes.data
-      if (result.length < 500) {
+      if (alignRes.length < 500) {
         failure('Alignment failed. Please check the logs.')
         return
       }
-      await fs.writeFile(assFile, result)
+      await fs.writeFile(assFile, alignRes)
       success()
-    })
-    await fs.writeFile(
-      assFile,
-      (
-        await axios.post('http://127.0.0.1:3000/align', form)
-      ).data
-    )
+    
+    const ass = await (await fetch('http://127.0.0.1:3000/align', {headers: header, method: 'POST', body: form})).text() 
+    await fs.writeFile(assFile, ass)
   } catch (error) {
     job.finishedOn = new Date(Date.now())
     job.status = JSON.stringify(error)
