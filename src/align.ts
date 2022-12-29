@@ -4,6 +4,7 @@ import os from 'os'
 import { exec, ExecOptions } from "child_process"
 import dayjs from "dayjs"
 import sanitize from "sanitize-filename"
+import { ignorePromiseErrors } from "."
 
 export const Align = async (lyrics: string, audioPath: string, baseName: string = crypto.randomUUID()) => {
     baseName = sanitize(baseName).replaceAll(' ', '')
@@ -24,10 +25,11 @@ export const Align = async (lyrics: string, audioPath: string, baseName: string 
     lyrics = lyrics.replace(/ +/mg, ' ') //collapse multiple spaces into one
     lyrics = lyrics.trim() //trim spaces
 
+    const lyricsFile = `${os.tmpdir()}/${baseName}.txt`
+    const alignedFile = `${os.tmpdir()}/${baseName}_aligned.txt`
+    const audioFile = `${os.tmpdir()}/${baseName}.webm`
+
     try {
-        const lyricsFile = `${os.tmpdir()}/${baseName}.txt`
-        const alignedFile = `${os.tmpdir()}/${baseName}_aligned.txt`
-        const audioFile = `${os.tmpdir()}/${baseName}.webm`
         await fs.writeFile(lyricsFile, lyrics)
         await fs.copyFile(audioPath, audioFile)
 
@@ -42,15 +44,31 @@ export const Align = async (lyrics: string, audioPath: string, baseName: string 
             return ''
         }
         const alignedLyrics = (await fs.readFile(alignedFile)).toString()
-        console.log(`Aligned lyrics:\n${alignedLyrics}`)
         if (alignedLyrics.length < 50) {
             console.log(`File ${alignedFile} is too small. Alignment failed.`)
             return ''
         }
+
+        console.log('Lyrics aligned successfully. Converting to ASS.')
+
         const jsonLyrics = compileJson(lyrics, alignedLyrics)
         const assLyrics = compileAss(jsonLyrics)
+        await Promise.all(
+            [
+                fs.unlink(lyricsFile),
+                fs.unlink(alignedFile),
+                fs.unlink(audioFile)
+            ].map(ignorePromiseErrors)
+        )
         return assLyrics
     } catch (error) {
+        await Promise.all(
+            [
+                fs.unlink(lyricsFile),
+                fs.unlink(alignedFile),
+                fs.unlink(audioFile)
+            ].map(ignorePromiseErrors)
+        )
         return ''
     }
 }
