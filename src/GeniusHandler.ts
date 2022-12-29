@@ -1,7 +1,6 @@
 import exec from '@simplyhexagonal/exec'
 import { Response } from 'express'
 import fs from 'fs/promises'
-import fs2 from 'fs'
 import * as Genius from 'genius-lyrics'
 import path from 'path'
 import sanitize from 'sanitize-filename'
@@ -47,14 +46,14 @@ export const getGeniusSong = async (
 
   const output: string = process.env.KARAOKE_OUTPUT || '/media/karaoke'
   const geniusApi = process.env.GENIUS_API || ''
-  const header = new Headers({Authorization: `Bearer ${geniusApi}`})
+  const header = new Headers({ Authorization: `Bearer ${geniusApi}` })
   let isJoined: boolean = false
   let isAligned: boolean = false
   const job = new Job(geniusId)
 
   try {
     // Get Track information from Genius and extract Artist, Song and URL
-    const geniusResponse = await(await fetch(
+    const geniusResponse = await (await fetch(
       `https://api.genius.com/songs/${geniusId}`, { headers: header }
     )).json()
 
@@ -187,13 +186,13 @@ export const getGeniusSong = async (
                   (cd /vocal-remover && \
                     python /vocal-remover/inference.py -i "${audioFile}" -o "${output}" && \
                     mv "${path.join(
-                      output,
-                      `${artist} - ${song}_Vocals.wav`
-                    )}" "${vocalsFile}" && \
+      output,
+      `${artist} - ${song}_Vocals.wav`
+    )}" "${vocalsFile}" && \
                     mv "${path.join(
-                      output,
-                      `${artist} - ${song}_Instruments.wav`
-                    )}" "${instrumentsFile}"
+      output,
+      `${artist} - ${song}_Instruments.wav`
+    )}" "${instrumentsFile}"
                   )`
 
     exec(split).execPromise.then(async (_splitRes) => {
@@ -221,21 +220,18 @@ export const getGeniusSong = async (
     const form = new FormData()
     form.append('lyrics', lyrics)
     form.append('format', 'ass')
-    form.append(
-      'audio_file',    
-      await (await fetch(`file://${audioFile}`)).blob(),
-      `${artist} - ${song}.webm`
-    )
-    const alignRes = await((await fetch('http://127.0.0.1:3000/align', {method: 'POST', body: form})).text())
-      isAligned = true
-      if (alignRes.length < 500) {
-        failure('Alignment failed. Please check the logs.')
-        return
-      }
-      await fs.writeFile(assFile, alignRes)
-      success()
-    
-    const ass = await (await fetch('http://127.0.0.1:3000/align', {headers: header, method: 'POST', body: form})).text() 
+    form.append('audio_file', audioFile)
+
+    const alignRes = await ((await fetch('http://127.0.0.1:3000/align', { method: 'POST', body: form })).text())
+    isAligned = true
+    if (alignRes.length < 500) {
+      failure('Alignment failed. Please check the logs.')
+      return
+    }
+    await fs.writeFile(assFile, alignRes)
+    success()
+
+    const ass = await (await fetch('http://127.0.0.1:3000/align', { headers: header, method: 'POST', body: form })).text()
     await fs.writeFile(assFile, ass)
   } catch (error) {
     job.finishedOn = new Date(Date.now())
@@ -246,4 +242,4 @@ export const getGeniusSong = async (
   }
 }
 
-export const searchGenius = (query: string, res: Response) => {}
+export const searchGenius = (query: string, res: Response) => { }
