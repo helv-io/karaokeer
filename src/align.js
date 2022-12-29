@@ -70,11 +70,11 @@ async function index(req, res) {
 		fs.writeFileSync(path.join(tmp_folder_path, 'lyrics.txt'), lyrics)
 
 		//copy the audio file to the tmp folder...
-		fs.copyFileSync(req.files.audio_file, path.join(tmp_folder_path, req.files.audio_file.name))
+		fs.copyFileSync(req.body.audio_file, path.join(tmp_folder_path, req.files.audio_file.split('/').pop()))
 
 		//if we're not quickly debugging an existing alignment...
 		if (!debug_tmp_folder) {
-			await process(tmp_folder_name, req.files.audio_file.name).catch((err) => { throw err })
+			await process(tmp_folder_name, req.files.audio_file.split('/').pop()).catch((err) => { throw err })
 		}
 
 		//check that the alignment.txt file exists and is not empty...
