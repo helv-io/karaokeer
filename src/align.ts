@@ -3,9 +3,11 @@ import fs from 'fs/promises'
 import os from 'os'
 import { exec, ExecOptions } from "child_process"
 import dayjs from "dayjs"
+import sanitize from "sanitize-filename"
 
-export const Align = async (lyrics: string, audioFile: string, baseName: string = crypto.randomUUID()) => {
-    if (!lyrics || !audioFile)
+export const Align = async (lyrics: string, audioPath: string, baseName: string = crypto.randomUUID()) => {
+    baseName = sanitize(baseName).replaceAll(' ', '')
+    if (!lyrics || !audioPath)
         return ''
 
     console.log('Cleaning lyrics...')
@@ -25,10 +27,12 @@ export const Align = async (lyrics: string, audioFile: string, baseName: string 
     try {
         const lyricsFile = `${os.tmpdir()}/${baseName}.txt`
         const alignedFile = `${os.tmpdir()}/${baseName}_aligned.txt`
+        const audioFile = `${os.tmpdir()}/${baseName}.webm`
         await fs.writeFile(lyricsFile, lyrics)
+        await fs.copyFile(audioPath, audioFile)
 
         console.log('Aligning Lyrics (this will take a while)...')
-        const cmd = `./RunAlignment.sh "${audioFile}" "${lyricsFile}" "${alignedFile}"`
+        const cmd = `./RunAlignment.sh ${audioFile} ${lyricsFile} ${alignedFile}`
         console.log(cmd)
         await promisifiedExec(cmd, { cwd: '/NUSAutoLyrixAlign/' })
 
