@@ -1,6 +1,7 @@
 import exec from '@simplyhexagonal/exec'
 import { Response } from 'express'
 import fs from 'fs/promises'
+import fs2 from 'fs'
 import * as Genius from 'genius-lyrics'
 import path from 'path'
 import sanitize from 'sanitize-filename'
@@ -221,8 +222,8 @@ export const getGeniusSong = async (
     form.append('lyrics', lyrics)
     form.append('format', 'ass')
     form.append(
-      'audio_file',
-      await (await fs.readFile(audioFile)).toString(),
+      'audio_file',    
+      await (await fetch(audioFile)).blob(),
       `${artist} - ${song}.webm`
     )
     const alignRes = await((await fetch('http://127.0.0.1:3000/align', {method: 'POST', body: form})).text())
