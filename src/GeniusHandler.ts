@@ -9,6 +9,7 @@ import ytdl from 'ytdl-core'
 import { GeniusLyrics } from 'genius-discord-lyrics'
 import { ignorePromiseErrors } from './index'
 import { Job, Jobs } from './Job'
+import { Align } from './align'
 
 const client = new Genius.Client(process.env.GENIUS_API || '')
 const genius = new GeniusLyrics(process.env.GENIUS_API || '')
@@ -213,17 +214,15 @@ export const getGeniusSong = async (
     form.append('format', 'ass')
     form.append('audio_file', audioFile)
 
-    const alignRes = await ((await fetch('http://127.0.0.1:3000/align', { method: 'POST', body: form })).text())
+    const alignRes = await Align(lyrics, audioFile, job.name)
     isAligned = true
     if (alignRes.length < 500) {
       failure('Alignment failed. Please check the logs.')
+      job.success = false
       return
     }
     await fs.writeFile(assFile, alignRes)
-    success()
-
-    const ass = await (await fetch('http://127.0.0.1:3000/align', { headers: header, method: 'POST', body: form })).text()
-    await fs.writeFile(assFile, ass)
+    await success()
   } catch (error) {
     job.finishedOn = new Date(Date.now())
     job.status = JSON.stringify(error)
