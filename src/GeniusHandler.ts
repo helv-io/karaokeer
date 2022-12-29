@@ -152,10 +152,7 @@ export const getGeniusSong = async (
     const assFile = path.join(output, `${artist} - ${song}.ass`)
     const karaokeFile = path.join(output, `${artist} - ${song}.mp4`)
     const vocalsFile = path.join(output, `${artist} - ${song} vocals.mp3`)
-    const instrumentsFile = path.join(
-      output,
-      `${artist} - ${song} accompaniment.mp3`
-    )
+    const instrumentsFile = path.join(output, `${artist} - ${song} accompaniment.mp3`)
 
     // Download all base files
     console.log('Downloading Video')
@@ -185,14 +182,8 @@ export const getGeniusSong = async (
                   || \
                   (cd /vocal-remover && \
                     python /vocal-remover/inference.py -i "${audioFile}" -o "${output}" && \
-                    mv "${path.join(
-      output,
-      `${artist} - ${song}_Vocals.wav`
-    )}" "${vocalsFile}" && \
-                    mv "${path.join(
-      output,
-      `${artist} - ${song}_Instruments.wav`
-    )}" "${instrumentsFile}"
+                    mv "${path.join(output, `${artist} - ${song}_Vocals.wav`)}" "${vocalsFile}" && \
+                    mv "${path.join(output, `${artist} - ${song}_Instruments.wav`)}" "${instrumentsFile}"
                   )`
 
     exec(split).execPromise.then(async (_splitRes) => {
@@ -241,5 +232,3 @@ export const getGeniusSong = async (
     console.error(error)
   }
 }
-
-export const searchGenius = (query: string, res: Response) => { }

@@ -13,7 +13,7 @@ async function index(req, res) {
 	console.log('Received an alignment request!')
 	res.setTimeout(10 * 3600 * 1000) //10 hours (in case we're stuck waiting in the queue)
 
-	if (!req.files || Object.keys(req.files).length === 0 || !req.files['audio_file']) {
+	if (!req.body || Object.keys(req.body).length === 0 || !req.body['audio_file'] || !req.body.audio_file) {
 		return res.status(400).send('audio_file is required')
 	}
 
@@ -24,7 +24,7 @@ async function index(req, res) {
 	let format = 'ass'
 	if (req.body['format']) {
 		if (!['raw', 'json', 'ass'].includes(req.body.format))
-		return res.status(400).send('If included, format must be "raw", "json" or "ass".')
+			return res.status(400).send('If included, format must be "raw", "json" or "ass".')
 		format = req.body.format
 	}
 
@@ -57,14 +57,12 @@ async function index(req, res) {
 	} while (fs.existsSync(tmp_folder_path))
 
 	//for quick debugging...
-	if (debug_tmp_folder)
-	{
+	if (debug_tmp_folder) {
 		tmp_folder_name = debug_tmp_folder
 		tmp_folder_path = path.join(__dirname, 'tmp', tmp_folder_name)
 	}
 
-	try
-	{
+	try {
 		//attempt to create the new tmp folder...
 		fs.mkdirSync(tmp_folder_path, { recursive: true })
 
@@ -75,8 +73,7 @@ async function index(req, res) {
 		fs.copyFileSync(req.files.audio_file, path.join(tmp_folder_path, req.files.audio_file.name))
 
 		//if we're not quickly debugging an existing alignment...
-		if (!debug_tmp_folder)
-		{
+		if (!debug_tmp_folder) {
 			await process(tmp_folder_name, req.files.audio_file.name).catch((err) => { throw err })
 		}
 
@@ -115,11 +112,10 @@ async function index(req, res) {
 			return res.status(200).send(aligned_text)
 		}
 	}
-	catch (err)
-	{
+	catch (err) {
 		rimraf(tmp_folder_path, () => { })
 		if (err && err['message']) {
-				console.log(`✖ ${err.message}`)
+			console.log(`✖ ${err.message}`)
 			return res.status(400).send(err.message)
 		} else {
 			console.log('✖ An unexpected error occurred while aligning the lyrics')
@@ -139,7 +135,7 @@ function random_str(length = 16) {
 }
 
 function promisifiedExec(cmd, options = {}) {
-	return new Promise((resolve, reject) =>	{
+	return new Promise((resolve, reject) => {
 		if (!options['env']) options.env = process.env
 		const exec_process = exec(cmd, options, (error, stdout, stderr) => {
 			if (error) {
@@ -154,7 +150,7 @@ function promisifiedExec(cmd, options = {}) {
 async function process(tmp_folder_name, audio_file_name) {
 	console.log('Aligning lyrics (this will take a while)...')
 	const cmd = `./RunAlignment.sh ${__dirname}/tmp/${tmp_folder_name}/${audio_file_name} ${__dirname}/tmp/${tmp_folder_name}/lyrics.txt ${__dirname}/tmp/${tmp_folder_name}/aligned.txt`
-	await promisifiedExec(cmd, { cwd: '/NUSAutoLyrixAlign/'})
+	await promisifiedExec(cmd, { cwd: '/NUSAutoLyrixAlign/' })
 }
 
 function compile_json(original_lyrics, aligned_text) {
@@ -265,8 +261,8 @@ function compile_json(original_lyrics, aligned_text) {
 
 	//fill in missing starts by going from start to finish...
 	let prev_end = song_start
-	for(let line_x = 0; line_x < results.length; line_x++) {
-		for(let word_x = 0; word_x < results[line_x].length; word_x++) {
+	for (let line_x = 0; line_x < results.length; line_x++) {
+		for (let word_x = 0; word_x < results[line_x].length; word_x++) {
 			if (results[line_x][word_x].start === null) results[line_x][word_x].start = prev_end
 			if (results[line_x][word_x].end !== null) prev_end = results[line_x][word_x].end
 		}
