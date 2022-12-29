@@ -223,7 +223,7 @@ export const getGeniusSong = async (
     form.append('format', 'ass')
     form.append(
       'audio_file',    
-      await (await fetch(audioFile)).blob(),
+      await (await fetch(`file://${audioFile}`)).blob(),
       `${artist} - ${song}.webm`
     )
     const alignRes = await((await fetch('http://127.0.0.1:3000/align', {method: 'POST', body: form})).text())
