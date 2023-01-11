@@ -111,7 +111,7 @@ export const getGeniusSong = async (
     }
 
     const failure = async (status: string) => {
-      console.log('All done!')
+      console.log('Something went wrong...')
       await Promise.all(
         [
           fs.unlink(videoFile),
